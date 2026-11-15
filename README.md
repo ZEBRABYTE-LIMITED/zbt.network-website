@@ -1,4 +1,4 @@
-# ZebraByte — Odoo → Astro
+# ZebraByte → Astro
 
 A faithful, minimal static migration of the ZebraByte one-page presentation website shown in the supplied screenshot. The original copy, brand assets and six partner logos were extracted from the supplied Odoo database backup; no Odoo database or application data is included here.
 
