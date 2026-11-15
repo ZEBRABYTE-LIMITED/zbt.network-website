@@ -1,0 +1,109 @@
+---
+import '../styles/global.css';
+
+const services = 'CyberSecurity / Secure Web Hosting/ IT Solutions / Consultation / Wordpress security / Secure Your Email / SSL / E2E / dedicated servers / Premium Network / Global Content Delivery Network / Cloudflare Alternative / Cybercrime Investigation / Information Security / Incident Response / Data Privacy / Firewall Management / ISO / Cloud Security / Network monitoring';
+
+const questions = [
+  { question: 'What is cybersecurity, and why is it important in the UK or RO?', answer: [
+    'Cybersecurity involves protecting systems, networks, and data from cyber threats such as hacking, phishing, and malware attacks. In the UK or RO, robust cybersecurity is crucial to safeguard personal information, maintain the integrity of critical infrastructure, and protect businesses from financial losses and reputational damage.'
+  ]},
+  { question: 'What are the most common types of cyber threats faced by organizations?', answer: [
+    'Organizations commonly face several cyber threats, including:',
+    'Phishing Attacks: Deceptive emails or messages designed to trick individuals into revealing sensitive information.',
+    'Ransomware: Malware that encrypts data, demanding payment for release.',
+    'Denial-of-Service (DoS) Attacks: Overloading systems with excessive traffic to disrupt services.',
+    'Advanced Persistent Threats (APTs): Sophisticated, prolonged cyberattacks often orchestrated by state-sponsored groups.'
+  ]},
+  { question: 'How can UK businesses enhance their cybersecurity measures?', answer: [
+    'Businesses can bolster cybersecurity by implementing several key strategies:',
+    'Regular Security Audits: Conduct assessments to identify and address vulnerabilities.',
+    'Employee Training: Educate staff on recognizing phishing attempts and adhering to security protocols.',
+    'Data Encryption: Utilize encryption to protect sensitive information during storage and transmission.',
+    'Multi-Factor Authentication (MFA): Require multiple forms of verification to access systems, enhancing access security.',
+    'Incident Response Planning: Develop and regularly update plans to respond effectively to cybersecurity incidents.',
+    'By proactively addressing these areas, UK or RO businesses can significantly reduce the risk of cyber threats and ensure the security of their operations and customer data.'
+  ]}
+];
+
+const partners = [
+  { src: '/assets/vercara.webp', alt: 'Vercara — a DigiCert company', name: 'vercara' },
+  { src: '/assets/cloudflare.webp', alt: 'Cloudflare', name: 'cloudflare' },
+  { src: '/assets/insecureweb.webp', alt: 'InsecureWeb', name: 'insecureweb' },
+  { src: '/assets/20i.svg', alt: '20i', name: 'twentyi' },
+  { src: '/assets/newfold.svg', alt: 'Newfold Digital', name: 'newfold' },
+  { src: '/assets/zb-partner.webp', alt: 'ZebraByte brand mark', name: 'zb' }
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ZebraByte — Next-Generation Cybersecurity & Secure Infrastructure. Secure hosting, cyber defence, cloud security and threat mitigation." />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" type="image/webp" href="/assets/favicon.webp" />
+    <title>ZebraByte – Next-Generation Cybersecurity &amp; Secure Infrastructure</title>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="intro" aria-labelledby="intro-title">
+        <div class="intro-copy">
+          <h1 id="intro-title">ZebraByte – Next-Generation Cybersecurity &amp; Secure Infrastructure</h1>
+          <div class="intro-paragraphs">
+            <p><strong>ZebraByte</strong> is a UK-registered cybersecurity and secure infrastructure company focused on protecting organisations, public institutions and digital businesses against modern cyber threats in today’s constantly evolving attack landscape.</p>
+            <p><strong>Our mission is simple:</strong></p>
+            <p>To provide enterprise-grade protection, intelligence, and defensive capabilities accessible to both growing businesses and critical organisations.</p>
+            <p>Built on practical experience in secure hosting, network defence, cloud security, and threat mitigation, ZebraByte solutions are designed around real-world attack scenarios, not theoretical risks.</p>
+          </div>
+          <a class="website-button" href="https://www.zebrabyte.ro/">OUR WEBSITE</a>
+        </div>
+        <div class="intro-logo">
+          <a href="https://www.zebrabyte.ro/" aria-label="ZebraByte website">
+            <img src="/assets/zebrabyte-black.svg" width="500" height="180" alt="ZebraByte logo" decoding="async" fetchpriority="high" />
+          </a>
+        </div>
+      </section>
+
+      <section class="services" aria-label="Services"><p>{services}</p></section>
+
+      <section class="faq" aria-labelledby="faq-title">
+        <h2 id="faq-title">Frequently Asked Questions</h2>
+        <p class="faq-lead">Here are some common questions about our company.</p>
+        <div class="faq-accordion">
+          {questions.map((item) => (
+            <details class="faq-item">
+              <summary>{item.question}</summary>
+              <div class="faq-answer">{item.answer.map((paragraph) => <p>{paragraph}</p>)}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section class="partners" aria-labelledby="partners-title">
+        <h2 id="partners-title">OUR Partners</h2>
+        <div class="partner-logos">
+          {partners.map((partner) => (
+            <div class={''+ 'partner partner--' + partner.name}>
+              <img src={partner.src} alt={partner.alt} loading="lazy" decoding="async" />
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+    <footer class="footer">
+      <div class="footer-inner">
+        <a href="https://www.zebrabyte.ro/" aria-label="ZebraByte homepage" class="footer-brand">
+          <img src="/assets/zebrabyte-white.webp" alt="ZebraByte" width="130" height="45" loading="lazy" />
+        </a>
+        <nav class="footer-links" aria-label="Footer">
+          <span>Privacy Policy</span><span class="separator">|</span>
+          <a href="https://status.zebrabyte.ro/">Status</a><span class="separator">|</span>
+          <span>Carbon</span><span class="separator">|</span>
+          <span>Termeni și condiții</span><span class="separator">|</span>
+          <span>Legal</span><span class="separator">|</span>
+          <span>Cookies</span>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
