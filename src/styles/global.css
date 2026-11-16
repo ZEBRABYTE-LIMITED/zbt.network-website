@@ -287,3 +287,79 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 @media (prefers-reduced-motion: reduce) {
   .intro-globe-canvas { cursor: default; }
 }
+
+
+/* Mobile correction: original white layout, compact brand/globe row.
+   The sphere must never consume a full screen above the headline. */
+@media (max-width: 900px) {
+  .intro {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 24px 3px 36px;
+    gap: 17px;
+    min-height: 0;
+  }
+  .intro-logo--animated {
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    justify-items: stretch;
+    gap: 18px;
+    width: 100%;
+    min-height: 140px;
+  }
+  .intro-logo--animated > a {
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: start;
+    width: min(100%, 190px);
+    max-width: 190px;
+  }
+  .intro-logo--animated .zbt-emblem-globe {
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: end;
+    width: 138px;
+    max-width: 100%;
+    box-shadow: inset 0 0 0 1px #443857;
+  }
+  .intro-copy h1 {
+    font-size: clamp(26px, 4.2vw, 35px);
+    line-height: 1.17;
+    margin-bottom: 21px;
+  }
+  .intro-paragraphs { font-size: 14px; line-height: 1.56; }
+  .intro-paragraphs p { margin-bottom: 14px; }
+}
+@media (max-width: 540px) {
+  .intro {
+    padding-top: 22px;
+    padding-bottom: 29px;
+    gap: 12px;
+  }
+  .intro-logo--animated {
+    grid-template-columns: minmax(0, 1fr) 118px;
+    gap: 12px;
+    min-height: 120px;
+  }
+  .intro-logo--animated > a {
+    width: min(100%, 157px);
+    max-width: 157px;
+  }
+  .intro-logo--animated .zbt-emblem-globe {
+    width: 118px;
+  }
+  .intro-copy h1 {
+    font-size: clamp(24px, 6.35vw, 27px);
+    line-height: 1.17;
+    letter-spacing: -.025em;
+    margin-bottom: 20px;
+  }
+  .intro-paragraphs { font-size: 13.5px; line-height: 1.55; }
+  .intro-paragraphs p { margin-bottom: 13px; }
+}
+@media (max-width: 350px) {
+  .intro-logo--animated { grid-template-columns: minmax(0, 1fr) 104px; }
+  .intro-logo--animated .zbt-emblem-globe { width: 104px; }
+  .intro-logo--animated > a { width: min(100%, 142px); }
+}

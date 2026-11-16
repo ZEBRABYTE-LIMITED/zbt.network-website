@@ -76,8 +76,8 @@
 
     // The globe texture is a projection of the ZebraByte emblem onto continents.
     // Do NOT draw the symbols at any coordinates in the sea.
-    const size = Math.min(18, Math.max(9, r * .032));
-    for (let i = 0; i < points.length; i += (smallScreen.matches ? 6 : 5)) {
+    const size = r < 85 ? 5.3 : Math.min(12, Math.max(6.5, r * .028));
+    for (let i = 0; i < points.length; i += (r < 85 ? 11 : smallScreen.matches ? 9 : 7)) {
       const p = points[i];
       const x = p[0] * cLon - p[2] * sLon;
       const front = p[2] * cLon + p[0] * sLon;
