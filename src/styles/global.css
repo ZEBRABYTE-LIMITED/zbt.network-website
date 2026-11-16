@@ -236,8 +236,8 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   padding: 46px 0 68px 12px;
 }
 .intro-copy {
-  position: relative;
-  z-index: 2;
+  /* Keep the absolute globe positioned against .intro, not this text column. */
+  position: static;
   width: 54%;
   max-width: 650px;
 }
