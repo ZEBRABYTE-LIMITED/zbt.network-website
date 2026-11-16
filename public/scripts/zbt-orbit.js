@@ -12,6 +12,8 @@
   const sprite = new Image();
   sprite.decoding = "async";
   const points = [];
+  let desktopEmblems = [];
+  let mobileEmblems = [];
 
   let width = 1, height = 1, ready = false, spriteReady = false;
   let rotation = 8 * RAD, latitude = 14 * RAD;
@@ -42,6 +44,53 @@
     }
   }
 
+
+  // Geodesic Poisson spacing preserves the continent silhouettes while keeping
+  // the actual four-part ZebraByte emblem individually readable.
+  function distributeLand(minDegrees) {
+    const chord = 2 * Math.sin((minDegrees * RAD) / 2);
+    const thresholdSquared = chord * chord;
+    const buckets = new Map();
+    const chosen = [];
+    const indices = points.map((_, index) => index);
+    // Fixed order so the layout never twinkles randomly between frames.
+    indices.sort((a, b) =>
+      (Math.imul(a + 1, 2654435761) >>> 0) -
+      (Math.imul(b + 1, 2654435761) >>> 0)
+    );
+
+    for (const idx of indices) {
+      const p = points[idx];
+      const x = Math.floor((p[0] + 1) / chord);
+      const y = Math.floor((p[1] + 1) / chord);
+      const z = Math.floor((p[2] + 1) / chord);
+      let tooClose = false;
+
+      for (let dx = -1; dx <= 1 && !tooClose; dx++) {
+        for (let dy = -1; dy <= 1 && !tooClose; dy++) {
+          for (let dz = -1; dz <= 1 && !tooClose; dz++) {
+            const bucket = buckets.get((x + dx) + ":" + (y + dy) + ":" + (z + dz));
+            if (!bucket) continue;
+            for (const q of bucket) {
+              const d0 = p[0] - q[0], d1 = p[1] - q[1], d2 = p[2] - q[2];
+              if (d0*d0 + d1*d1 + d2*d2 < thresholdSquared) {
+                tooClose = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      if (tooClose) continue;
+
+      chosen.push(p);
+      const key = x + ":" + y + ":" + z;
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(p);
+    }
+    return chosen;
+  }
+
   function measure() {
     const rect = canvas.getBoundingClientRect();
     const nextWidth = Math.max(1, rect.width);
@@ -49,40 +98,71 @@
     if (Math.abs(nextWidth - width) < 0.3 && Math.abs(nextHeight - height) < 0.3 && canvas.width) return;
     width = nextWidth;
     height = nextHeight;
-    const scale = Math.min(window.devicePixelRatio || 1, smallScreen.matches ? 1.25 : 1.75);
+    const scale = Math.min(window.devicePixelRatio || 1, smallScreen.matches ? 2.5 : 2);
     canvas.width = Math.round(width * scale);
     canvas.height = Math.round(height * scale);
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
     render();
   }
 
+
   function render() {
     if (!ready || !spriteReady) return;
     ctx.clearRect(0, 0, width, height);
     const cx = width * 0.5, cy = height * 0.5;
-    const r = Math.min(width, height) * .46;
-    const cLon = Math.cos(rotation), sLon = Math.sin(rotation);
-    const cLat = Math.cos(latitude), sLat = Math.sin(latitude);
+    const radius = Math.min(width, height) * .46;
+    const cosLon = Math.cos(rotation), sinLon = Math.sin(rotation);
+    const cosLat = Math.cos(latitude), sinLat = Math.sin(latitude);
+    const mobile = smallScreen.matches;
+    const glyphSize = Math.min(22, Math.max(13, radius * .073));
+    const spacing = glyphSize * 1.14;
+    const spacingSquared = spacing * spacing;
+    const candidates = [];
 
-    // Transparent canvas: symbols alone form the rotating continents.
-    // The globe texture is a projection of the ZebraByte emblem onto continents.
-    // Do NOT draw the symbols at any coordinates in the sea.
-    const size = Math.max(9, Math.min(15, r * .039));
-    for (let i = 0; i < points.length; i += (smallScreen.matches ? 6 : 5)) {
-      const p = points[i];
-      const x = p[0] * cLon - p[2] * sLon;
-      const front = p[2] * cLon + p[0] * sLon;
-      const y = p[1] * cLat - front * sLat;
-      const depth = p[1] * sLat + front * cLat;
-      if (depth <= .028) continue;
+    for (const p of mobile ? mobileEmblems : desktopEmblems) {
+      const x = p[0] * cosLon - p[2] * sinLon;
+      const forward = p[2] * cosLon + p[0] * sinLon;
+      const y = p[1] * cosLat - forward * sinLat;
+      const depth = p[1] * sinLat + forward * cosLat;
+      if (depth <= .04) continue;
 
-      const rim = Math.pow(depth, .65);
-      const variation = .79 + .21 * Math.sin(i * .48) * Math.sin(i * .17 + 1.3);
-      const opacity = (.18 + .77 * rim) * variation;
-      const s = size * (.64 + depth * .38);
-      const px = cx + x * r, py = cy - y * r;
-      ctx.globalAlpha = Math.max(.10, Math.min(.92, opacity));
-      ctx.drawImage(sprite, px - s * .5, py - s * .5, s, s);
+      candidates.push({
+        x: cx + x * radius,
+        y: cy - y * radius,
+        depth
+      });
+    }
+
+    // Prefer the near hemisphere where two projected marks would overlap.
+    // Adjacent screen-space buckets eliminate clumps at the sphere's edge.
+    candidates.sort((a, b) => b.depth - a.depth);
+    const cells = new Map();
+    for (const mark of candidates) {
+      const ix = Math.floor(mark.x / spacing);
+      const iy = Math.floor(mark.y / spacing);
+      let occupied = false;
+      for (let dx = -1; dx <= 1 && !occupied; dx++) {
+        for (let dy = -1; dy <= 1 && !occupied; dy++) {
+          const nearby = cells.get((ix + dx) + ":" + (iy + dy));
+          if (!nearby) continue;
+          for (const other of nearby) {
+            const dX = mark.x - other.x, dY = mark.y - other.y;
+            if (dX*dX + dY*dY < spacingSquared) {
+              occupied = true;
+              break;
+            }
+          }
+        }
+      }
+      if (occupied) continue;
+      const key = ix + ":" + iy;
+      if (!cells.has(key)) cells.set(key, []);
+      cells.get(key).push(mark);
+
+      const opacity = .55 + .41 * Math.sqrt(mark.depth);
+      const size = glyphSize * (.89 + mark.depth * .11);
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(sprite, mark.x - size / 2, mark.y - size / 2, size, size);
     }
     ctx.globalAlpha = 1;
   }
@@ -157,6 +237,9 @@
     if (typeof data.polyline !== "string" || data.points < 1000) throw new Error("Invalid continent mask");
     decodeLand(data.polyline);
     if (points.length !== data.points) throw new Error("Incomplete land pattern");
+    desktopEmblems = distributeLand(3.8);
+    mobileEmblems = distributeLand(6.4);
+    points.length = 0;
     ready = true;
     if (spriteReady) holder.dataset.ready = "true";
     measure();
