@@ -53,8 +53,14 @@ const partners = [
   </head>
   <body>
     <main class="page-shell">
-      <section class="intro" aria-labelledby="intro-title">
+      <section class="intro intro--orbital" aria-labelledby="intro-title">
+        <div class="intro-globe" aria-hidden="true">
+          <canvas id="zbt-globe" class="intro-globe-canvas" width="920" height="920"></canvas>
+          <div class="intro-globe-fallback"><img src="/assets/zebrabyte-mark.svg" alt="" width="320" height="320" /></div>
+        </div>
         <div class="intro-copy">
+          <a class="intro-brand" href="https://www.zebrabyte.ro/" aria-label="ZebraByte website"><img src="/assets/zebrabyte-white.svg" alt="ZebraByte" width="190" height="69" /></a>
+          <p class="intro-eyebrow">SECURITY · INFRASTRUCTURE · TRUST</p>
           <h1 id="intro-title">ZebraByte – Next-Generation Cybersecurity &amp; Secure Infrastructure</h1>
           <div class="intro-paragraphs">
             <p><strong>ZebraByte</strong> is a UK-registered cybersecurity and secure infrastructure company focused on protecting organisations, public institutions and digital businesses against modern cyber threats in today’s constantly evolving attack landscape.</p>
@@ -64,11 +70,7 @@ const partners = [
           </div>
           <a class="website-button" href="https://www.zebrabyte.ro/">OUR WEBSITE</a>
         </div>
-        <div class="intro-logo">
-          <a href="https://www.zebrabyte.ro/" aria-label="ZebraByte website">
-            <img src="/assets/zebrabyte-black.svg" width="500" height="180" alt="ZebraByte logo" decoding="async" fetchpriority="high" />
-          </a>
-        </div>
+
       </section>
 
       <section class="services" aria-label="Services"><p>{services}</p></section>
@@ -123,5 +125,6 @@ const partners = [
         </div>
       </div>
     </footer>
+  <script is:inline src="/scripts/zbt-globe.js" defer></script>
   </body>
 </html>
