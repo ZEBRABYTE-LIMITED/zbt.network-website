@@ -99,7 +99,7 @@
       if (z < .025) continue;
       const edge = Math.pow(z,.54);
       const glyphSize = size * (.8 + .2*z);
-      baseCtx.globalAlpha = .31 + .50*edge;
+      baseCtx.globalAlpha = .50 + .43*edge;
       baseCtx.drawImage(sprite,x-glyphSize/2,y-glyphSize/2,glyphSize,glyphSize);
     }
     baseCtx.globalAlpha=1;
@@ -138,7 +138,7 @@
       bins.get(key).push(mark);
       const depth=Math.sqrt(mark.z);
       const s=size*(.86+.14*mark.z);
-      landCtx.globalAlpha=.59+.40*depth;
+      landCtx.globalAlpha=.90+.10*depth;
       landCtx.drawImage(sprite,mark.x-s/2,mark.y-s/2,s,s);
       if(mark.id % 32 === 0) {
         const wave = .5 + .5*Math.sin(time*.0012+mark.id*1.618);
@@ -205,7 +205,7 @@
     cx=w*(isMobile?.18:.22);
     cy=h*(isMobile?.49:.53);
     radius=isMobile?Math.min(w*.99,h*.57):Math.min(w*.44,h*.69);
-    size=Math.min(15.5,Math.max(8.1,radius*.022));
+    size=Math.min(15.5,Math.max(9.0,radius*.022));
     for (const c of [base,landCanvas,effectCanvas]){
       c.width=Math.round(w*dpr);
       c.height=Math.round(h*dpr);
