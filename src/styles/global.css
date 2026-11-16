@@ -289,6 +289,10 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 }
 .intro-globe-canvas:active { cursor: grabbing; }
 .intro-globe-fallback { display: none; }
+@media (min-width: 1280px) and (max-width: 1399px) {
+  /* Keep the globe fully visible within narrower desktop viewports. */
+  .intro-art { right: -32px; width: min(44vw, 560px); }
+}
 @media (min-width: 1024px) and (max-width: 1279px) {
   .intro { min-height: 715px; }
   .intro-copy { width: 52%; }
