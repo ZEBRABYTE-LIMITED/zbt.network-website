@@ -186,6 +186,9 @@
         gl.bindTexture(gl.TEXTURE_2D,tex);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
         gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);
+        const textureError=gl.getError();
+        if(textureError!==gl.NO_ERROR)
+          throw new Error("GPU image upload failed: "+textureError);
         for(const [key,value] of [
           [gl.TEXTURE_MIN_FILTER,gl.LINEAR],
           [gl.TEXTURE_MAG_FILTER,gl.LINEAR],
@@ -195,7 +198,16 @@
         return tex;
       }
       const earthTexture=texture(maskCanvas,0,true);
-      const glyphTexture=texture(landGlyph,1,false);
+      // SVG <img> without intrinsic pixel dimensions is not accepted as a
+      // WebGL texture by some browsers. Rasterize it once into a small
+      // transparent Canvas; the GPU then reuses this antialiased texture.
+      const glyphCanvas=document.createElement("canvas");
+      glyphCanvas.width=256;
+      glyphCanvas.height=256;
+      const glyph2d=glyphCanvas.getContext("2d",{alpha:true});
+      glyph2d.clearRect(0,0,256,256);
+      glyph2d.drawImage(landGlyph,0,0,256,256);
+      const glyphTexture=texture(glyphCanvas,1,false);
       gl.useProgram(program);
       gl.uniform1i(gl.getUniformLocation(program,"earth"),0);
       gl.uniform1i(gl.getUniformLocation(program,"emblem"),1);
