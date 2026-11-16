@@ -86,9 +86,174 @@
     return ((a+(b-a)*tx)*(1-ty)+(c+(d-c)*tx)*ty)/255;
   }
 
+
+  // GPU fast path: the black mask is sampled per fixed ZebraByte glyph in
+  // a single instanced draw call. No repeated SVG drawImage calls per frame.
+  let gpu = null;
+  function initGPU(maskCanvas) {
+    const extra = document.createElement("canvas");
+    extra.className = "intro-globe-canvas intro-globe-ink";
+    extra.style.zIndex = "3";
+    extra.style.pointerEvents = "none";
+    const gl = extra.getContext("webgl2", {
+      alpha:true, antialias:true, premultipliedAlpha:false,
+      powerPreference:"low-power"
+    });
+    if (!gl) return;
+
+    const vsText = [
+      "#version 300 es",
+      "precision highp float;",
+      "layout(location=0) in vec2 corner;",
+      "layout(location=1) in vec2 xy;",
+      "layout(location=2) in vec3 dir;",
+      "layout(location=3) in vec2 szfade;",
+      "uniform vec2 viewport;",
+      "uniform vec4 orientation;",
+      "uniform float elapsed;",
+      "uniform sampler2D earth;",
+      "out vec2 uv;",
+      "out float opacity;",
+      "void main() {",
+      "const float PI=3.14159265358979;",
+      "float v=dir.y; float z=dir.z; float u=dir.x;",
+      "float n=clamp(v*orientation.z+z*orientation.w,-1.0,1.0);",
+      "float f=z*orientation.z-v*orientation.w;",
+      "float wx=u*orientation.x+f*orientation.y;",
+      "float wz=f*orientation.x-u*orientation.y;",
+      "vec2 mapUV=vec2(fract((atan(wx,wz)+PI)/(2.0*PI)),(PI*.5-asin(n))/PI);",
+      "float land=texture(earth,mapUV).r;",
+      "float seed=fract(sin(float(gl_InstanceID)*12.9898)*43758.5453);",
+      "float pulse=pow(.5+.5*sin(elapsed*1.8+seed*25.0),8.0);",
+      "float led=step(.974,seed)*pulse*.08;",
+      "opacity=clamp(land*(1.0+led),0.0,1.0)*szfade.y;",
+      "uv=corner+vec2(.5);",
+      "vec2 p=xy+corner*szfade.x;",
+      "gl_Position=vec4(p.x/viewport.x*2.0-1.0,1.0-p.y/viewport.y*2.0,0.0,1.0);",
+      "}"
+    ].join("\n");
+    const fsText = [
+      "#version 300 es",
+      "precision mediump float;",
+      "uniform sampler2D emblem;",
+      "in vec2 uv;",
+      "in float opacity;",
+      "out vec4 color;",
+      "void main(){",
+      "float a=texture(emblem,uv).a;",
+      "color=vec4(.078,.078,.078,a*opacity);",
+      "}"
+    ].join("\n");
+    function shader(type,code){
+      const sh=gl.createShader(type);
+      gl.shaderSource(sh,code);
+      gl.compileShader(sh);
+      if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))
+        throw new Error("GPU shader "+gl.getShaderInfoLog(sh));
+      return sh;
+    }
+    try {
+      const vertex=shader(gl.VERTEX_SHADER,vsText);
+      const frag=shader(gl.FRAGMENT_SHADER,fsText);
+      const program=gl.createProgram();
+      gl.attachShader(program,vertex);
+      gl.attachShader(program,frag);
+      gl.linkProgram(program);
+      gl.deleteShader(vertex);
+      gl.deleteShader(frag);
+      if(!gl.getProgramParameter(program,gl.LINK_STATUS))
+        throw new Error("GPU link "+gl.getProgramInfoLog(program));
+      const vao=gl.createVertexArray();
+      gl.bindVertexArray(vao);
+      const quad=gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([
+        -.5,-.5,.5,-.5,-.5,.5,.5,.5
+      ]),gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+      const instances=gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,instances);
+      for(const [location,length,offset] of [[1,2,0],[2,3,8],[3,2,20]]) {
+        gl.enableVertexAttribArray(location);
+        gl.vertexAttribPointer(location,length,gl.FLOAT,false,28,offset);
+        gl.vertexAttribDivisor(location,1);
+      }
+      gl.bindVertexArray(null);
+      function texture(source,unit,repeat) {
+        const tex=gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0+unit);
+        gl.bindTexture(gl.TEXTURE_2D,tex);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);
+        for(const [key,value] of [
+          [gl.TEXTURE_MIN_FILTER,gl.LINEAR],
+          [gl.TEXTURE_MAG_FILTER,gl.LINEAR],
+          [gl.TEXTURE_WRAP_S,repeat?gl.REPEAT:gl.CLAMP_TO_EDGE],
+          [gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]
+        ]) gl.texParameteri(gl.TEXTURE_2D,key,value);
+        return tex;
+      }
+      const earthTexture=texture(maskCanvas,0,true);
+      const glyphTexture=texture(landGlyph,1,false);
+      gl.useProgram(program);
+      gl.uniform1i(gl.getUniformLocation(program,"earth"),0);
+      gl.uniform1i(gl.getUniformLocation(program,"emblem"),1);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+      gpu={
+        gl,canvas:extra,program,vao,instances,earthTexture,glyphTexture,
+        viewport:gl.getUniformLocation(program,"viewport"),
+        orientation:gl.getUniformLocation(program,"orientation"),
+        elapsed:gl.getUniformLocation(program,"elapsed")
+      };
+      holder.appendChild(extra);
+      inkCanvas.style.display="none";
+      holder.dataset.renderer="webgl2";
+    } catch(error) {
+      console.warn("ZebraByte WebGL unavailable, retaining Canvas fallback",error);
+      gpu=null;
+      extra.remove();
+    }
+  }
+
+  function uploadGPU() {
+    if(!gpu)return;
+    const buffer=new Float32Array(dots.length*7);
+    for(let i=0;i<dots.length;i++){
+      const d=dots[i],at=i*7;
+      buffer[at]=d.x;buffer[at+1]=d.y;
+      buffer[at+2]=d.u;buffer[at+3]=d.v;buffer[at+4]=d.z;
+      buffer[at+5]=d.size;buffer[at+6]=d.fade;
+    }
+    const {gl,instances}=gpu;
+    gl.bindBuffer(gl.ARRAY_BUFFER,instances);
+    gl.bufferData(gl.ARRAY_BUFFER,buffer,gl.STATIC_DRAW);
+  }
+
+  function drawGPU(now) {
+    const {gl,canvas,program,vao,earthTexture,glyphTexture}=gpu;
+    gl.viewport(0,0,canvas.width,canvas.height);
+    gl.clearColor(0,0,0,0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(program);
+    gl.bindVertexArray(vao);
+    gl.uniform2f(gpu.viewport,width,height);
+    gl.uniform4f(gpu.orientation,
+      Math.cos(longitude),Math.sin(longitude),Math.cos(incline),Math.sin(incline));
+    gl.uniform1f(gpu.elapsed,reducedMotion.matches?0:now/1000);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D,earthTexture);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D,glyphTexture);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP,0,4,dots.length);
+    gl.bindVertexArray(null);
+  }
+
   // Exactly aligned overlays: an emblem simply changes from grey to black.
   // There are NEVER two displaced sets of emblems or duplicate silhouettes.
   function drawContinents(dt,now) {
+    if (gpu) { drawGPU(now); return; }
     inkCtx.clearRect(0,0,width,height);
     const cs=Math.cos(longitude),sn=Math.sin(longitude);
     const ct=Math.cos(incline),st=Math.sin(incline);
@@ -119,10 +284,15 @@
       c.width=Math.round(width*ratio);
       c.height=Math.round(height*ratio);
     }
+    if(gpu) {
+      gpu.canvas.width=Math.round(width*ratio);
+      gpu.canvas.height=Math.round(height*ratio);
+    }
     baseCtx.setTransform(ratio,0,0,ratio,0,0);
     inkCtx.setTransform(ratio,0,0,ratio,0,0);
     makeDots();
     holder.dataset.symbols=String(dots.length);
+    uploadGPU();
     if (ready) {
       drawBase();
       drawContinents(0,reducedMotion.matches?0:performance.now());
@@ -140,7 +310,7 @@
     const dt=lastTime?Math.min(.08,(now-lastTime)/1000):0;
     lastTime=now;
     if(!dragging) longitude+=dt*.075;
-    const cadence=mobile.matches?62:39;
+    const cadence=gpu?(mobile.matches?42:33):(mobile.matches?100:70);
     if(now-lastPaint>=cadence) {
       drawContinents(Math.min(.10,(now-lastPaint)/1000 || dt),now);
       lastPaint=now;
@@ -201,6 +371,7 @@
     const pixels=maskCtx.getImageData(0,0,maskWidth,maskHeight).data;
     maskBytes=new Uint8Array(maskWidth*maskHeight);
     for(let i=0;i<maskBytes.length;i++)maskBytes[i]=pixels[i*4];
+    initGPU(maskCanvas);
     ready=true;
     holder.dataset.ready="true";
     measure();
