@@ -227,105 +227,193 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 }
 
 
-/* Hero: an oversized, entirely transparent ZebraByte symbol globe.
-   Never draw a disk, border, glow, or sphere backdrop. */
-.intro {
+
+/* ZebraByte orbital landing hero: custom three-layer Canvas implementation.
+   The geometry, motion and monochrome look are original ZebraByte work. */
+.tempo-hero {
+  --tempo-bg: #fbfbfb;
+  --tempo-ink: #111111;
+  --tempo-muted: #66676b;
   position: relative;
+  isolation: isolate;
   display: block;
-  min-height: 665px;
-  padding: 46px 0 68px 12px;
+  width: 100vw;
+  min-height: min(900px, 100svh);
+  min-height: max(720px, 100svh);
+  margin-left: calc(50% - 50vw);
+  padding: 0;
+  overflow: clip;
+  color: var(--tempo-ink);
+  background: var(--tempo-bg);
 }
-.intro-copy {
-  /* Keep the absolute globe positioned against .intro, not this text column. */
-  position: static;
-  width: 54%;
-  max-width: 650px;
-}
-.intro-brand-top {
-  display: inline-block;
-  width: 150px;
-  max-width: 48%;
-  margin-bottom: 27px;
-}
-.intro-brand-top img { display: block; width: 100%; height: auto; }
-.intro-art {
+.tempo-background {
   position: absolute;
-  z-index: 1;
-  top: 50%;
-  right: -82px;
-  width: min(52vw, 620px);
-  transform: translateY(-50%);
-  background: transparent;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  user-select: none;
 }
-.zbt-emblem-globe {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.zbt-emblem-globe::before,
-.zbt-emblem-globe::after {
-  content: none;
-  display: none;
-}
-.intro-globe-canvas {
+.tempo-canvas {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   background: transparent;
-  cursor: grab;
-  touch-action: pan-y;
 }
-.intro-globe-canvas:active { cursor: grabbing; }
-.intro-globe-fallback { display: none; }
-@media (min-width: 1024px) and (max-width: 1199px) {
-  .intro-copy { width: 52%; }
-  .intro-art { right: -16px; width: min(49vw, 550px); }
+.tempo-base { z-index: 0; cursor: grab; touch-action: pan-y; pointer-events: auto; }
+.tempo-base:active { cursor: grabbing; }
+.tempo-land { z-index: 1; pointer-events: none; }
+.tempo-effects { z-index: 2; pointer-events: none; }
+.tempo-veil {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 31%,
+    #fbfbfb52 48%,
+    #fbfbfbce 59%,
+    #fbfbfbf5 74%,
+    #fbfbfb 100%
+  );
+  pointer-events: none;
 }
-@media (max-width: 1023px) {
-  .intro {
-    display: block;
-    min-height: 0;
-    padding: 33px 4px 47px;
+.tempo-shell {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 35px;
+  min-height: max(720px, 100svh);
+  padding: clamp(34px, 5vh, 60px) clamp(34px, 4vw, 72px) 37px;
+  pointer-events: none;
+}
+.tempo-header,
+.tempo-layout,
+.tempo-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(520px, 50%);
+  align-items: center;
+}
+.tempo-brand {
+  grid-column: 2;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  width: 162px;
+  max-width: 100%;
+  pointer-events: auto;
+}
+.tempo-brand img { display: block; width: 100%; height: auto; }
+.tempo-copy {
+  grid-column: 2;
+  width: 100%;
+  max-width: 570px;
+  justify-self: start;
+  pointer-events: auto;
+}
+.tempo-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  margin-bottom: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eeeeee;
+  border: 1px solid #e8e8e8;
+  color: #575757;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .035em;
+}
+.tempo-copy h1 {
+  max-width: 680px;
+  margin: 0;
+  color: #0f0f0f;
+  font-size: clamp(56px, 5.5vw, 82px);
+  line-height: 1.02;
+  letter-spacing: -.052em;
+  font-weight: 630;
+}
+.tempo-copy h1 em {
+  color: #303030;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -.035em;
+}
+.tempo-description {
+  max-width: 550px;
+  margin: 27px 0 29px;
+  color: #656565;
+  font-size: clamp(16px, 1.26vw, 19px);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+.tempo-description strong { color: #282828; font-weight: 650; }
+.tempo-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 29px;
+  min-height: 46px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background-color .2s ease, transform .2s ease;
+}
+.tempo-cta:hover { background: #333; transform: translateY(-1px); }
+.tempo-foot {
+  color: #868686;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .085em;
+  text-transform: uppercase;
+}
+.tempo-foot span:last-child { grid-column: 2; justify-self: end; }
+@media (max-width: 1150px) and (min-width: 761px) {
+  .tempo-header, .tempo-layout, .tempo-foot { grid-template-columns: minmax(0, 1fr) minmax(430px, 52%); }
+  .tempo-copy h1 { font-size: clamp(50px, 5.3vw, 66px); }
+  .tempo-shell { padding-inline: 36px; }
+}
+@media (max-width: 760px) {
+  .tempo-hero { min-height: max(725px, 100svh); }
+  .tempo-shell {
+    min-height: max(725px, 100svh);
+    padding: 27px 25px 24px;
+    gap: 28px;
   }
-  .intro-copy {
-    width: 100%;
-    max-width: 760px;
-    margin-inline: auto;
-  }
-  .intro-brand-top { width: 142px; margin-bottom: 22px; }
-  .intro-art {
-    position: static;
-    width: min(74vw, 400px);
-    max-width: 100%;
-    margin: 8px auto 13px;
-    transform: none;
+  .tempo-header,
+  .tempo-layout,
+  .tempo-foot { grid-template-columns: minmax(0, 1fr); }
+  .tempo-header { align-items: start; }
+  .tempo-brand { grid-column: 1; width: 145px; }
+  .tempo-layout { align-items: center; }
+  .tempo-copy { grid-column: 1; max-width: 570px; margin: 0 auto; text-align: center; }
+  .tempo-copy h1 { font-size: clamp(42px, 10.5vw, 62px); line-height: 1.055; }
+  .tempo-badge { margin-bottom: 24px; font-size: 10px; }
+  .tempo-description { margin: 25px 0 26px; font-size: 17px; line-height: 1.55; }
+  .tempo-foot { display: flex; justify-content: space-between; font-size: 10px; }
+  .tempo-veil {
+    background:
+      radial-gradient(ellipse 82% 38% at 50% 55%, #fbfbfbf5 0%, #fbfbfbad 60%, transparent 100%),
+      linear-gradient(90deg, transparent 0%, #fbfbfb42 69%, #fbfbfbdc 100%);
   }
 }
-@media (max-width: 600px) {
-  .intro { padding: 28px 2px 38px; }
-  .intro-brand-top { width: 132px; margin-bottom: 19px; }
-  .intro-copy h1 {
-    font-size: clamp(25px, 6.7vw, 31px);
-    line-height: 1.16;
-    margin-bottom: 0;
-  }
-  .intro-art {
-    width: min(78vw, 340px);
-    margin: 4px auto 12px;
-  }
-  .intro-paragraphs { font-size: 13px; line-height: 1.58; }
-  .intro-paragraphs p { margin-bottom: 13px; }
-}
-@media (max-width: 360px) {
-  .intro-brand-top { width: 121px; margin-bottom: 17px; }
-  .intro-art { width: min(78vw, 270px); margin-block: 0 10px; }
-  .intro-copy h1 { font-size: 24px; }
+@media (max-width: 400px) {
+  .tempo-shell { padding-inline: 20px; }
+  .tempo-brand { width: 130px; }
+  .tempo-copy h1 { font-size: clamp(38px, 10.4vw, 46px); }
+  .tempo-description { font-size: 15px; }
+  .tempo-badge { font-size: 9px; padding-inline: 8px; }
+  .tempo-foot { font-size: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .intro-globe-canvas { cursor: default; }
+  .tempo-cta { transition: none; }
+  .tempo-base { cursor: default; }
 }

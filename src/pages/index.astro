@@ -53,27 +53,32 @@ const partners = [
   </head>
   <body>
     <main class="page-shell">
-      <section class="intro" aria-labelledby="intro-title">
-        <div class="intro-copy">
-          <a class="intro-brand-top" href="https://www.zebrabyte.ro/" aria-label="ZebraByte website">
-            <img src="/assets/zebrabyte-black.svg" alt="ZebraByte" width="165" height="60" decoding="async" fetchpriority="high" />
-          </a>
-          <h1 id="intro-title">ZebraByte – Next-Generation Cybersecurity &amp; Secure Infrastructure</h1>
-          <div class="intro-art" aria-label="Rotating globe formed from ZebraByte symbols">
-            <div class="zbt-emblem-globe">
-              <canvas id="zbt-globe" class="intro-globe-canvas" width="900" height="900" role="img" aria-label="Animated globe with continents made from ZebraByte symbols"></canvas>
-              <div class="intro-globe-fallback" aria-hidden="true"></div>
+      <section class="intro tempo-hero" aria-labelledby="intro-title">
+        <div class="tempo-background" aria-hidden="true">
+          <canvas id="zbt-orbit-base" class="tempo-canvas tempo-base"></canvas>
+          <canvas id="zbt-orbit-land" class="tempo-canvas tempo-land"></canvas>
+          <canvas id="zbt-orbit-effects" class="tempo-canvas tempo-effects"></canvas>
+        </div>
+        <div class="tempo-veil" aria-hidden="true"></div>
+        <div class="tempo-shell">
+          <header class="tempo-header">
+            <a href="https://www.zebrabyte.ro/" class="tempo-brand" aria-label="ZebraByte website">
+              <img src="/assets/zebrabyte-black.svg" alt="ZebraByte" width="174" height="64" decoding="async" fetchpriority="high" />
+            </a>
+          </header>
+          <div class="tempo-layout">
+            <div class="tempo-copy">
+              <span class="tempo-badge">Managed security · Compliance · Hosting</span>
+              <h1 id="intro-title">Security.<br /><em>By ZebraByte.</em></h1>
+              <p class="tempo-description"><strong>Cybersecurity, compliance and secure hosting — managed together.</strong> Enterprise-grade protection and resilient infrastructure built for organisations that cannot afford uncertainty.</p>
+              <a class="tempo-cta" href="https://www.zebrabyte.ro/">Explore ZebraByte <span aria-hidden="true">↗</span></a>
             </div>
           </div>
-          <div class="intro-paragraphs">
-            <p><strong>ZebraByte</strong> is a UK-registered cybersecurity and secure infrastructure company focused on protecting organisations, public institutions and digital businesses against modern cyber threats in today’s constantly evolving attack landscape.</p>
-            <p><strong>Our mission is simple:</strong></p>
-            <p>To provide enterprise-grade protection, intelligence, and defensive capabilities accessible to both growing businesses and critical organisations.</p>
-            <p>Built on practical experience in secure hosting, network defence, cloud security, and threat mitigation, ZebraByte solutions are designed around real-world attack scenarios, not theoretical risks.</p>
-          </div>
-          <a class="website-button" href="https://www.zebrabyte.ro/">OUR WEBSITE</a>
+          <footer class="tempo-foot">
+            <span>Drag to spin.</span>
+            <span>ZEBRABYTE LIMITED</span>
+          </footer>
         </div>
-
       </section>
 
       <section class="services" aria-label="Services"><p>{services}</p></section>
