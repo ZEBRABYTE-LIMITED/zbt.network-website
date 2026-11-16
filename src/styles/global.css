@@ -232,7 +232,7 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 .intro {
   position: relative;
   display: block;
-  min-height: 665px;
+  min-height: 865px;
   padding: 46px 0 68px 12px;
 }
 .intro-copy {
@@ -252,10 +252,12 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   position: absolute;
   z-index: 1;
   top: 50%;
-  right: -82px;
-  width: min(52vw, 620px);
+  right: max(-125px, calc(598px - 50vw));
+  width: min(66vw, 830px);
   transform: translateY(-50%);
   background: transparent;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #00000016 8%, #000 30%, #000 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #00000016 8%, #000 30%, #000 100%);
 }
 .zbt-emblem-globe {
   position: relative;
@@ -283,8 +285,9 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 .intro-globe-canvas:active { cursor: grabbing; }
 .intro-globe-fallback { display: none; }
 @media (min-width: 1024px) and (max-width: 1199px) {
+  .intro { min-height: 715px; }
   .intro-copy { width: 52%; }
-  .intro-art { right: -16px; width: min(49vw, 550px); }
+  .intro-art { right: -12px; width: min(57vw, 630px); }
 }
 @media (max-width: 1023px) {
   .intro {
@@ -300,10 +303,12 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   .intro-brand-top { width: 142px; margin-bottom: 22px; }
   .intro-art {
     position: static;
-    width: min(74vw, 400px);
+    width: min(85vw, 570px);
     max-width: 100%;
-    margin: 8px auto 13px;
+    margin: 6px auto 15px;
     transform: none;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 }
 @media (max-width: 600px) {
@@ -315,15 +320,15 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
     margin-bottom: 0;
   }
   .intro-art {
-    width: min(78vw, 340px);
-    margin: 4px auto 12px;
+    width: min(90vw, 410px);
+    margin: 3px auto 15px;
   }
   .intro-paragraphs { font-size: 13px; line-height: 1.58; }
   .intro-paragraphs p { margin-bottom: 13px; }
 }
 @media (max-width: 360px) {
   .intro-brand-top { width: 121px; margin-bottom: 17px; }
-  .intro-art { width: min(78vw, 270px); margin-block: 0 10px; }
+  .intro-art { width: min(89vw, 325px); margin-block: 0 12px; }
   .intro-copy h1 { font-size: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {

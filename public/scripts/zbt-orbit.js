@@ -28,9 +28,11 @@
     dots = [];
     const cx = width / 2, cy = height / 2;
     radius = Math.min(width, height) * .473;
-    const spacing = mobile.matches ? Math.max(8.3, width*.029) : Math.max(9.1, width*.0185);
+    const spacing = mobile.matches
+      ? Math.max(5.4, Math.min(6.5, width * .0175))
+      : Math.max(6.3, Math.min(8.0, width * .0093));
     const stepY = spacing * Math.sqrt(3) / 2;
-    const symbol = spacing * .77;
+    const symbol = spacing * .72;
     let row = 0;
     for (let y = -radius; y <= radius; y += stepY, row++) {
       const offset = row % 2 ? spacing/2 : 0;
@@ -41,8 +43,8 @@
         const z=Math.sqrt(1-rr);
         dots.push({
           x:cx+x, y:cy+y, u,v,z,
-          size:symbol,
-          fade: .46 + .48*Math.pow(z,.32),
+          size:symbol * (.68 + .32*Math.pow(z,.43)),
+          fade: .32 + .66*Math.pow(z,.48),
           dark:0,
           phase:(row*29 + Math.round(x*5))*0.1569
         });
@@ -60,7 +62,7 @@
     baseCtx.globalAlpha=1;
   }
 
-  function isLand(u,v,z,cosLon,sinLon,cosLat,sinLat) {
+  function landCoverage(u,v,z,cosLon,sinLon,cosLat,sinLat) {
     // Inverse camera transform: which geographical coordinate sits
     // beneath this single fixed screen-space ZebraByte emblem?
     const latitudeY=v*cosLat + z*sinLat;
@@ -69,11 +71,19 @@
     const wz=forward*cosLon - u*sinLon;
     const lat=Math.asin(Math.max(-1,Math.min(1,latitudeY)))*DEG;
     const lon=Math.atan2(wx,wz)*DEG;
-    let ix=Math.floor((lon+180)/360*maskWidth);
-    let iy=Math.floor((90-lat)/180*maskHeight);
-    ix=((ix%maskWidth)+maskWidth)%maskWidth;
-    iy=Math.max(0,Math.min(maskHeight-1,iy));
-    return maskBytes[iy*maskWidth+ix] > 127;
+    // Bilinear land sampling and a slightly blurred source mask turn
+    // stair-stepped coarse coastlines into graceful gradients.
+    const mx=(lon+180)/360*maskWidth - .5;
+    const my=(90-lat)/180*maskHeight - .5;
+    const x0=Math.floor(mx),y0=Math.floor(my);
+    const tx=mx-x0,ty=my-y0;
+    const xA=((x0%maskWidth)+maskWidth)%maskWidth;
+    const xB=(xA+1)%maskWidth;
+    const yA=Math.max(0,Math.min(maskHeight-1,y0));
+    const yB=Math.max(0,Math.min(maskHeight-1,y0+1));
+    const a=maskBytes[yA*maskWidth+xA],b=maskBytes[yA*maskWidth+xB];
+    const c=maskBytes[yB*maskWidth+xA],d=maskBytes[yB*maskWidth+xB];
+    return ((a+(b-a)*tx)*(1-ty)+(c+(d-c)*tx)*ty)/255;
   }
 
   // Exactly aligned overlays: an emblem simply changes from grey to black.
@@ -84,7 +94,7 @@
     const ct=Math.cos(incline),st=Math.sin(incline);
     const ease=dt>0 ? (1-Math.exp(-dt*8.5)) : 1;
     for (const dot of dots) {
-      const target=isLand(dot.u,dot.v,dot.z,cs,sn,ct,st)?1:0;
+      const target=landCoverage(dot.u,dot.v,dot.z,cs,sn,ct,st);
       dot.dark += (target-dot.dark)*ease;
       if (dot.dark < .013) continue;
       // A gentle "LED" breathe changes the tone of selected black emblems;
@@ -104,7 +114,7 @@
     if (canvas.width>1 && Math.abs(nextW-width)<.3 && Math.abs(nextH-height)<.3) return;
     width=nextW;
     height=nextH;
-    ratio=Math.min(devicePixelRatio||1,mobile.matches?2.4:2);
+    ratio=Math.min(devicePixelRatio||1,mobile.matches?2.5:2);
     for (const c of [canvas,inkCanvas]) {
       c.width=Math.round(width*ratio);
       c.height=Math.round(height*ratio);
@@ -112,6 +122,7 @@
     baseCtx.setTransform(ratio,0,0,ratio,0,0);
     inkCtx.setTransform(ratio,0,0,ratio,0,0);
     makeDots();
+    holder.dataset.symbols=String(dots.length);
     if (ready) {
       drawBase();
       drawContinents(0,reducedMotion.matches?0:performance.now());
@@ -129,7 +140,7 @@
     const dt=lastTime?Math.min(.08,(now-lastTime)/1000):0;
     lastTime=now;
     if(!dragging) longitude+=dt*.075;
-    const cadence=mobile.matches?55:35;
+    const cadence=mobile.matches?62:39;
     if(now-lastPaint>=cadence) {
       drawContinents(Math.min(.10,(now-lastPaint)/1000 || dt),now);
       lastPaint=now;
@@ -183,7 +194,10 @@
     const maskCanvas=document.createElement("canvas");
     maskCanvas.width=maskWidth;maskCanvas.height=maskHeight;
     const maskCtx=maskCanvas.getContext("2d",{willReadFrequently:true});
+    // One-time anti-aliasing of the source land mask. No per-frame blur.
+    maskCtx.filter="blur(1.45px)";
     maskCtx.drawImage(maskImage,0,0,maskWidth,maskHeight);
+    maskCtx.filter="none";
     const pixels=maskCtx.getImageData(0,0,maskWidth,maskHeight).data;
     maskBytes=new Uint8Array(maskWidth*maskHeight);
     for(let i=0;i<maskBytes.length;i++)maskBytes[i]=pixels[i*4];
