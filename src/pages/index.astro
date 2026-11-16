@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 
+const services = 'CyberSecurity / Secure Web Hosting/ IT Solutions / Consultation / Wordpress security / Secure Your Email / SSL / E2E / dedicated servers / Premium Network / Global Content Delivery Network / Cloudflare Alternative / Cybercrime Investigation / Information Security / Incident Response / Data Privacy / Firewall Management / ISO / Cloud Security / Network monitoring';
+
 const questions = [
   { question: 'What is cybersecurity, and why is it important in the UK or RO?', answer: [
     'Cybersecurity involves protecting systems, networks, and data from cyber threats such as hacking, phishing, and malware attacks. In the UK or RO, robust cybersecurity is crucial to safeguard personal information, maintain the integrity of critical infrastructure, and protect businesses from financial losses and reputational damage.'
@@ -44,64 +46,40 @@ const partners = [
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
     <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
     <meta name="referrer" content="no-referrer" />
-    <meta name="description" content="ZebraByte delivers managed cybersecurity, managed compliance and secure managed hosting for organisations that take security seriously." />
-    <meta name="theme-color" content="#0f0d17" />
+    <meta name="description" content="ZebraByte — Next-Generation Cybersecurity & Secure Infrastructure. Secure hosting, cyber defence, cloud security and threat mitigation." />
+    <meta name="theme-color" content="#ffffff" />
     <link rel="icon" type="image/webp" href="/assets/favicon.webp" />
-    <title>ZebraByte — Managed Cybersecurity, Compliance &amp; Secure Hosting</title>
+    <title>ZebraByte – Next-Generation Cybersecurity &amp; Secure Infrastructure</title>
   </head>
   <body>
     <main class="page-shell">
-      <section class="intro intro--orbital" aria-labelledby="intro-title">
-        <div class="intro-globe" aria-hidden="true">
-          <canvas id="zbt-globe" class="intro-globe-canvas" width="1000" height="1000"></canvas>
-          <div class="intro-globe-fallback"></div>
-        </div>
+      <section class="intro" aria-labelledby="intro-title">
         <div class="intro-copy">
-          <a class="intro-brand" href="https://www.zebrabyte.ro/" aria-label="ZebraByte website">
-            <img src="/assets/zebrabyte-white.svg" alt="ZebraByte" width="190" height="69" fetchpriority="high" />
-          </a>
-          <p class="intro-eyebrow">MANAGED CYBERSECURITY <span aria-hidden="true">·</span> COMPLIANCE <span aria-hidden="true">·</span> HOSTING</p>
-          <h1 id="intro-title">Cybersecurity.<br />Compliance.<br /><em>Secure hosting.</em></h1>
-          <p class="intro-lede">Protection you can depend on. Compliance you can demonstrate. Infrastructure built to withstand real threats.</p>
-          <p class="intro-detail">Managed security, regulatory readiness and resilient hosting — delivered together by ZebraByte.</p>
-          <div class="intro-actions">
-            <a class="website-button" href="https://www.zebrabyte.ro/">Explore ZebraByte <span aria-hidden="true">↗</span></a>
-            <a class="intro-secondary" href="#services">Our expertise <span aria-hidden="true">↓</span></a>
+          <h1 id="intro-title">ZebraByte – Next-Generation Cybersecurity &amp; Secure Infrastructure</h1>
+          <div class="intro-paragraphs">
+            <p><strong>ZebraByte</strong> is a UK-registered cybersecurity and secure infrastructure company focused on protecting organisations, public institutions and digital businesses against modern cyber threats in today’s constantly evolving attack landscape.</p>
+            <p><strong>Our mission is simple:</strong></p>
+            <p>To provide enterprise-grade protection, intelligence, and defensive capabilities accessible to both growing businesses and critical organisations.</p>
+            <p>Built on practical experience in secure hosting, network defence, cloud security, and threat mitigation, ZebraByte solutions are designed around real-world attack scenarios, not theoretical risks.</p>
           </div>
+          <a class="website-button" href="https://www.zebrabyte.ro/">OUR WEBSITE</a>
+        </div>
+        <div class="intro-logo intro-logo--animated">
+          <div class="zbt-emblem-globe" aria-hidden="true">
+            <canvas id="zbt-globe" class="intro-globe-canvas" width="520" height="520"></canvas>
+            <div class="intro-globe-fallback"></div>
+          </div>
+          <a href="https://www.zebrabyte.ro/" aria-label="ZebraByte website">
+            <img src="/assets/zebrabyte-black.svg" width="500" height="180" alt="ZebraByte logo" decoding="async" fetchpriority="high" />
+          </a>
         </div>
       </section>
 
-      <section id="services" class="services" aria-labelledby="services-heading">
-        <div class="section-heading">
-          <p class="section-kicker">WHAT WE DO</p>
-          <h2 id="services-heading">Security, from policy to infrastructure.</h2>
-          <p class="section-lead">Three connected services. One accountable partner.</p>
-        </div>
-        <div class="service-grid">
-          <article class="service-card">
-            <span class="service-number" aria-hidden="true">01 / PROTECT</span>
-            <h3>Managed Cybersecurity</h3>
-            <p>Continuous security oversight, risk reduction, threat monitoring and practical incident readiness.</p>
-            <span class="service-meta">DEFENCE · MONITORING · RESPONSE</span>
-          </article>
-          <article class="service-card">
-            <span class="service-number" aria-hidden="true">02 / GOVERN</span>
-            <h3>Managed Compliance</h3>
-            <p>Structured compliance programmes, evidence management and support for GDPR, ISO 27001 and NIS2 readiness.</p>
-            <span class="service-meta">GOVERNANCE · RISK · EVIDENCE</span>
-          </article>
-          <article class="service-card">
-            <span class="service-number" aria-hidden="true">03 / OPERATE</span>
-            <h3>Managed Hosting</h3>
-            <p>Resilient web infrastructure, secure configurations, monitoring and managed operational support.</p>
-            <span class="service-meta">CLOUD · AVAILABILITY · SUPPORT</span>
-          </article>
-        </div>
-      </section>
+      <section class="services" aria-label="Services"><p>{services}</p></section>
 
       <section class="faq" aria-labelledby="faq-title">
         <h2 id="faq-title">Frequently Asked Questions</h2>
-        <p class="faq-lead">Answers to questions about the security challenges we help organisations address.</p>
+        <p class="faq-lead">Here are some common questions about our company.</p>
         <div class="faq-accordion">
           {questions.map((item) => (
             <details class="faq-item">
@@ -113,7 +91,7 @@ const partners = [
       </section>
 
       <section class="partners" aria-labelledby="partners-title">
-        <h2 id="partners-title">Our partners</h2>
+        <h2 id="partners-title">OUR Partners</h2>
         <div class="partner-logos">
           {partners.map((partner) => (
             <div class={''+ 'partner partner--' + partner.name}>
@@ -149,6 +127,6 @@ const partners = [
         </div>
       </div>
     </footer>
-  <script is:inline src="/scripts/zbt-orbit.js" defer></script>
+    <script is:inline src="/scripts/zbt-orbit.js" defer></script>
   </body>
 </html>
