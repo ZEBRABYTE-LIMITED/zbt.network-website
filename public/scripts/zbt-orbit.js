@@ -100,6 +100,16 @@
       powerPreference:"low-power"
     });
     if (!gl) return;
+    // Software WebGL can be markedly slower than native Canvas 2D for a
+    // dense globe. Do not fingerprint or transmit hardware information:
+    // inspect the local renderer solely to choose the faster path.
+    const debugInfo=gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer=debugInfo?String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)):"";
+    if (/SwiftShader|llvmpipe|softpipe|Software Rasterizer|Basic Render Driver/i.test(renderer)){
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      holder.dataset.renderer="canvas2d";
+      return;
+    }
 
     const vsText = [
       "#version 300 es",
