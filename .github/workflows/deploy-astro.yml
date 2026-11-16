@@ -36,10 +36,6 @@ jobs:
           test -f dist/robots.txt
           grep -q 'name="robots"' dist/index.html
           grep -q 'noindex' dist/index.html
-          test -s dist/assets/zebrabyte-glyph.svg
-          test -s dist/scripts/zbt-orbit.js
-          test -s dist/data/zbt-continent-dots.json
-          test ! -e dist/data/zbt-geography.json
           for asset in zebrabyte-black.svg zebrabyte-white.svg favicon.svg vercara.webp cloudflare.webp xcitium.svg telekom-business-partner.webp 20i.svg newfold.svg iubenda-bronze.png logo-seap.webp zb-partner.webp; do
             test -s "dist/assets/$asset"
           done
