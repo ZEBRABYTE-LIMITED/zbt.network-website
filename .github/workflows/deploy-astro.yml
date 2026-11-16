@@ -44,8 +44,10 @@ jobs:
           test -s dist/assets/zebrabyte-glyph-ocean.svg
           test -s dist/assets/zebrabyte-glyph-land.svg
           test -s dist/assets/zebrabyte-glyph-led.svg
-          grep -q 'zbt-orbit-base' dist/index.html
           test -s dist/data/zbt-continent-dots.json
+          test -s dist/assets/zbt-earth-mask.png
+          grep -q 'id="zbt-globe-base"' dist/index.html
+          grep -q 'id="zbt-globe-ink"' dist/index.html
           test ! -f dist/sitemap.xml
           printf 'www.zbt.network\n' > dist/CNAME
           touch dist/.nojekyll
