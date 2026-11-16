@@ -6,7 +6,7 @@ Minimal one-page company presentation migrated from the original Odoo page to **
 
 - `src/pages/index.astro` — page content, FAQ and partner logos.
 - `src/styles/global.css` — desktop/mobile design and restrained image sizing.
-- `public/assets/` — the approved, locally stored brand and partner artwork.
+- `public/assets/` — the approved, locally stored brand and partner artwork, including XCITIUM, Telekom, iubenda and SEAP.
 - `public/robots.txt` — crawler access to the noindex directive.
 - `.github/workflows/deploy-astro.yml` — builds Astro and deploys `dist/` to GitHub Pages.
 
