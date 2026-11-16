@@ -1,44 +1,33 @@
-# ZebraByte → Astro
+# ZBT Network — Astro
 
-A faithful, minimal static migration of the ZebraByte one-page presentation website shown in the supplied screenshot. The original copy, brand assets and six partner logos were extracted from the supplied Odoo database backup; no Odoo database or application data is included here.
+Minimal one-page company presentation migrated from the original Odoo page to **Astro 5**.
 
-## Requirements
+## Source of truth
 
-Node.js 20 or later.
+- `src/pages/index.astro` — page content, FAQ and partner logos.
+- `src/styles/global.css` — desktop/mobile design and restrained image sizing.
+- `public/assets/` — the approved, locally stored brand and partner artwork.
+- `public/robots.txt` — crawler access to the noindex directive.
+- `.github/workflows/deploy-astro.yml` — builds Astro and deploys `dist/` to GitHub Pages.
 
-## Develop
+## Build locally
 
-```bash
+Use Node.js 22 or later.
+
+```sh
 npm install
-npm run dev
-```
-
-## Production build
-
-```bash
 npm run build
+npm run preview
 ```
 
-The fully static website is generated in `dist/`. No database, API, environment variables or client-side JavaScript are required. FAQ uses built-in HTML `<details>` elements.
+The published site is the actual Astro-generated `dist/` output, **not** a manually edited root HTML page.
 
-## Deploy to Cloudflare Pages
+## Search-engine indexing
 
-Connect this repository to Cloudflare Workers & Pages → Create application → Pages → Connect to Git.
+The page intentionally includes `noindex, nofollow, noarchive, nosnippet, noimageindex`. There is no sitemap. The robots.txt policy allows the indexers to crawl the page so they can observe `noindex`; blocking it in robots.txt would make the exclusion less reliable.
 
-| Setting | Value |
-|---|---|
-| Framework preset | Astro |
-| Production branch | `main` |
-| Build command | `npm run build` |
-| Build output directory | `dist` |
-| Root directory | `/` |
-| Node version | 22 (or newer supported Node release) |
+**This is not private hosting**: the URL and this public GitHub repository are accessible to people who have a link. Do not commit Odoo databases, credentials or customer information.
 
-The provided `_headers` applies security response headers on Cloudflare Pages. The repository can be kept private while connected through your GitHub integration.
+## Hosting
 
-## Notes
-
-- All images are local. Main/partner artwork is taken from the original Odoo asset store.
-- The footer retains its appearance; labels without a verified destination are intentionally non-clickable rather than fake links.
-- The screenshot's original English copy remains in place for fidelity.
-- Do **not** commit the original `.dump`, `.zip`, `filestore` or other Odoo backup files; they can contain private company or customer data.
+GitHub Pages uses the GitHub Actions source, publishing the Astro static build on each push to `main`. The custom domain and enforced HTTPS are configured in GitHub Pages settings.

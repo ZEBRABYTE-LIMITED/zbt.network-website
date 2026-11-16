@@ -1,3 +1,0 @@
-# Page indexing is disabled by meta robots noindex. Keep crawl access so bots can discover it.
-User-agent: *
-Allow: /
