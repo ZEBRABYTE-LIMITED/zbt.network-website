@@ -367,3 +367,107 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 @media (prefers-reduced-motion: reduce) {
   .intro--orbital .website-button { transition: none; }
 }
+
+/* Geographic globe: natural coastline visibility and mobile-first composition. */
+.intro-globe {
+  width: min(790px, 64vw);
+  left: clamp(-195px, -5vw, -70px);
+  overflow: visible;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.intro-globe::after {
+  background: radial-gradient(circle at 40% 38%, transparent 66%, rgba(16, 13, 24, .18) 83%, rgba(16, 13, 24, .53) 100%);
+}
+.intro-globe-canvas { border-radius: 50%; }
+.intro-globe-fallback { opacity: .08; }
+@media (max-width: 1080px) and (min-width: 761px) {
+  .intro-globe { width: min(650px, 57vw); left: -116px; }
+}
+@media (max-width: 760px) {
+  .intro--orbital {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    min-height: 0;
+    padding: 23px max(22px, calc((100vw - 570px) / 2)) 53px;
+    overflow: hidden;
+  }
+  .intro-globe {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: min(72vw, 350px);
+    max-width: 100%;
+    aspect-ratio: 1;
+    height: auto;
+    transform: none;
+    margin: 0 auto 24px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+  }
+  .intro--orbital .intro-copy {
+    grid-column: auto;
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: min(100%, 570px);
+    max-width: none;
+    margin-inline: auto;
+  }
+  .intro-brand {
+    display: inline-flex;
+    width: 158px;
+    max-width: 47%;
+    margin-bottom: 23px;
+  }
+  .intro-eyebrow {
+    margin-bottom: 15px;
+    font-size: 10px;
+    line-height: 1.5;
+    letter-spacing: .135em;
+  }
+  .intro--orbital h1 {
+    margin-bottom: 26px;
+    font-size: clamp(28px, 6.5vw, 38px);
+    line-height: 1.13;
+    letter-spacing: -.027em;
+  }
+  .intro--orbital .intro-paragraphs {
+    font-size: 14px;
+    line-height: 1.68;
+  }
+  .intro--orbital .intro-paragraphs p {
+    margin-bottom: 16px;
+  }
+}
+@media (max-width: 440px) {
+  .intro--orbital {
+    padding: 21px 21px 44px;
+  }
+  .intro-globe {
+    width: min(76vw, 300px);
+    margin-bottom: 18px;
+  }
+  .intro-brand {
+    width: 145px;
+    margin-bottom: 19px;
+  }
+  .intro--orbital h1 {
+    font-size: clamp(26px, 7.2vw, 32px);
+    line-height: 1.14;
+    margin-bottom: 24px;
+  }
+  .intro--orbital .intro-paragraphs { font-size: 13.5px; }
+  .intro-eyebrow {
+    font-size: 9px;
+    letter-spacing: .105em;
+    overflow-wrap: anywhere;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-globe-canvas { cursor: default; }
+}
