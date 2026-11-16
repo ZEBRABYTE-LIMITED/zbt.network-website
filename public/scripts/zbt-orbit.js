@@ -1,122 +1,177 @@
 (() => {
   "use strict";
+
   const canvas = document.getElementById("zbt-globe");
   const ctx = canvas?.getContext?.("2d", { alpha: true, desynchronized: true });
   if (!canvas || !ctx) return;
-  const holder = canvas.parentElement;
-  const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const compact = window.matchMedia("(max-width: 760px)");
-  const glyph = new Image();
-  glyph.decoding = "async";
-  let ready = false, width = 1, height = 1, yaw = -.32, tilt = -.18;
-  let pointerDown = false, lastX = 0, lastY = 0, active = true;
-  let raf = 0, previousTime = 0, previousDraw = 0;
 
-  // A mathematically projected spherical lattice of ZebraByte monograms.
-  // This is intentionally abstract: no geographic maps, borders or countries.
+  const holder = canvas.parentElement;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const smallScreen = window.matchMedia("(max-width: 760px)");
+  const RAD = Math.PI / 180;
+  const sprite = new Image();
+  sprite.decoding = "async";
   const points = [];
-  for (let lat = -81, row = 0; lat <= 81; lat += 3.15, row++) {
-    const phi = lat * Math.PI / 180;
-    const cosPhi = Math.cos(phi);
-    const sinPhi = Math.sin(phi);
-    for (let lon = -180; lon < 180; lon += 3.15) {
-      const lambda = (lon + (row % 2 ? 1.57 : 0)) * Math.PI / 180;
-      points.push([cosPhi * Math.sin(lambda), sinPhi, cosPhi * Math.cos(lambda), row]);
+
+  let width = 1, height = 1, ready = false, spriteReady = false;
+  let rotation = 8 * RAD, latitude = 14 * RAD;
+  let frame = 0, previousTime = 0, previousRender = 0;
+  let visible = true, dragging = false, pointerX = 0, pointerY = 0;
+
+  // All points are on actual land. The ocean deliberately contains no symbols.
+  // Natural Earth 1:50m is public-domain geographic data.
+  function decodeLand(text) {
+    let i = 0, lon = 0, lat = 0;
+    while (i < text.length) {
+      let values = [];
+      for (let n = 0; n < 2; n++) {
+        let value = 0, shift = 0, part;
+        do {
+          if (i >= text.length) throw new Error("Truncated land pattern");
+          part = text.charCodeAt(i++) - 63;
+          value |= (part & 31) << shift;
+          shift += 5;
+        } while (part >= 32);
+        values.push((value & 1) ? ~(value >> 1) : value >> 1);
+      }
+      lon += values[0];
+      lat += values[1];
+      const lambda = (lon / 100) * RAD, phi = (lat / 100) * RAD;
+      const cosPhi = Math.cos(phi);
+      points.push([cosPhi * Math.sin(lambda), Math.sin(phi), cosPhi * Math.cos(lambda)]);
     }
   }
+
   function measure() {
     const rect = canvas.getBoundingClientRect();
-    width = Math.max(1, rect.width);
-    height = Math.max(1, rect.height);
-    const dpr = Math.min(compact.matches ? 1.4 : 1.8, window.devicePixelRatio || 1);
-    canvas.width = Math.round(width * dpr);
-    canvas.height = Math.round(height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    draw();
+    const nextWidth = Math.max(1, rect.width);
+    const nextHeight = Math.max(1, rect.height);
+    if (Math.abs(nextWidth - width) < 0.3 && Math.abs(nextHeight - height) < 0.3 && canvas.width) return;
+    width = nextWidth;
+    height = nextHeight;
+    const scale = Math.min(window.devicePixelRatio || 1, smallScreen.matches ? 1.25 : 1.75);
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    render();
   }
-  function draw() {
-    if (!ready) return;
+
+  function render() {
+    if (!ready || !spriteReady) return;
     ctx.clearRect(0, 0, width, height);
-    const r = Math.min(width, height) * .467;
-    const cx = width / 2, cy = height / 2;
-    const sy = Math.sin(yaw), cyaw = Math.cos(yaw);
-    const st = Math.sin(tilt), ct = Math.cos(tilt);
-    const iconSize = Math.max(9, r * .027);
-    const stride = compact.matches ? 2 : 1;
-    for (let i = 0; i < points.length; i += stride) {
+    const cx = width * 0.5, cy = height * 0.5;
+    const r = Math.min(width, height) * .46;
+    const cLon = Math.cos(rotation), sLon = Math.sin(rotation);
+    const cLat = Math.cos(latitude), sLat = Math.sin(latitude);
+
+    // An atmospheric glow conveys volume without drawing an opaque ocean map.
+    const glow = ctx.createRadialGradient(cx - r * .2, cy - r * .12, r * .04, cx, cy, r * 1.05);
+    glow.addColorStop(0, "rgba(99,78,152,.13)");
+    glow.addColorStop(.63, "rgba(77,55,128,.05)");
+    glow.addColorStop(1, "rgba(15,13,23,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 1.04, 0, Math.PI * 2);
+    ctx.fill();
+
+    // The globe texture is a projection of the ZebraByte emblem onto continents.
+    // Do NOT draw the symbols at any coordinates in the sea.
+    const size = Math.min(18, Math.max(7, r * .023));
+    for (let i = 0; i < points.length; i++) {
       const p = points[i];
-      const x = p[0] * cyaw + p[2] * sy;
-      const depth = p[2] * cyaw - p[0] * sy;
-      if (depth <= .06) continue;
-      const dx = x * ct - p[1] * st;
-      const dy = x * st + p[1] * ct;
-      const fade = Math.pow(depth, .82);
-      const size = iconSize * (.63 + .36 * depth);
-      const px = cx + dx * r, py = cy + dy * r;
-      // Subtle procedural tone variation prevents the repetitive pattern from
-      // looking like a flat sheet pasted onto a circle.
-      const shimmer = .75 + .25 * Math.sin(i * .52 + yaw * .6);
-      ctx.globalAlpha = (.11 + .53 * fade) * shimmer;
-      ctx.drawImage(glyph, px - size/2, py - size/2, size, size);
+      const x = p[0] * cLon - p[2] * sLon;
+      const front = p[2] * cLon + p[0] * sLon;
+      const y = p[1] * cLat - front * sLat;
+      const depth = p[1] * sLat + front * cLat;
+      if (depth <= .028) continue;
+
+      const rim = Math.pow(depth, .65);
+      const variation = .79 + .21 * Math.sin(i * .48) * Math.sin(i * .17 + 1.3);
+      const opacity = (.16 + .73 * rim) * variation;
+      const s = size * (.64 + depth * .38);
+      const px = cx + x * r, py = cy - y * r;
+      ctx.globalAlpha = Math.max(.10, Math.min(.92, opacity));
+      ctx.drawImage(sprite, px - s * .5, py - s * .5, s, s);
     }
     ctx.globalAlpha = 1;
   }
+
   function stop() {
-    if (raf) window.cancelAnimationFrame(raf);
-    raf = 0;
+    if (frame) window.cancelAnimationFrame(frame);
+    frame = 0;
     previousTime = 0;
-    previousDraw = 0;
+    previousRender = 0;
   }
+
   function tick(now) {
-    raf = 0;
-    if (!active || motion.matches || document.hidden) return;
-    const dt = previousTime ? Math.min(.08, (now - previousTime)/1000) : 0;
+    frame = 0;
+    if (!visible || reducedMotion.matches || document.hidden) return;
+    const dt = previousTime ? Math.min(.065, (now - previousTime) / 1000) : 0;
     previousTime = now;
-    if (!pointerDown) yaw += dt * .13;
-    const cadence = compact.matches ? 62 : 40;
-    if (now - previousDraw > cadence) {
-      draw();
-      previousDraw = now;
+    if (!dragging) rotation += dt * .065;
+    const interval = smallScreen.matches ? 66 : 38;
+    if (now - previousRender >= interval) {
+      render();
+      previousRender = now;
     }
-    raf = window.requestAnimationFrame(tick);
+    frame = window.requestAnimationFrame(tick);
   }
+
   function sync() {
     stop();
-    draw();
-    if (active && ready && !motion.matches && !document.hidden) {
-      raf = window.requestAnimationFrame(tick);
+    render();
+    if (ready && spriteReady && visible && !reducedMotion.matches && !document.hidden) {
+      frame = window.requestAnimationFrame(tick);
     }
   }
-  canvas.addEventListener("pointerdown", e => {
-    if (compact.matches || motion.matches) return;
-    pointerDown = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    canvas.setPointerCapture(e.pointerId);
+
+  canvas.addEventListener("pointerdown", event => {
+    if (smallScreen.matches || reducedMotion.matches) return;
+    dragging = true;
+    pointerX = event.clientX;
+    pointerY = event.clientY;
+    canvas.setPointerCapture(event.pointerId);
   });
-  canvas.addEventListener("pointermove", e => {
-    if (!pointerDown) return;
-    yaw += (e.clientX - lastX) * .004;
-    tilt = Math.max(-.75, Math.min(.75, tilt + (e.clientY - lastY) * .0018));
-    lastX = e.clientX;
-    lastY = e.clientY;
-    draw();
+  canvas.addEventListener("pointermove", event => {
+    if (!dragging) return;
+    rotation -= (event.clientX - pointerX) * .003;
+    latitude = Math.max(-.85, Math.min(.85, latitude + (event.clientY - pointerY) * .002));
+    pointerX = event.clientX;
+    pointerY = event.clientY;
+    render();
   });
-  for (const name of ["pointerup", "pointercancel", "lostpointercapture"]) {
-    canvas.addEventListener(name, () => { pointerDown = false; });
+  for (const event of ["pointerup", "pointercancel", "lostpointercapture"]) {
+    canvas.addEventListener(event, () => { dragging = false; });
   }
+
   new ResizeObserver(measure).observe(canvas);
   new IntersectionObserver(entries => {
-    active = !!entries[0]?.isIntersecting;
+    visible = !!entries[0]?.isIntersecting;
     sync();
-  }, {rootMargin: "100px"}).observe(holder);
+  }, { rootMargin: "100px" }).observe(holder);
   document.addEventListener("visibilitychange", sync);
-  motion.addEventListener?.("change", sync);
-  glyph.onload = () => {
+  reducedMotion.addEventListener?.("change", sync);
+
+  Promise.all([
+    fetch("/data/zbt-continent-dots.json", { cache: "force-cache" }).then(res => {
+      if (!res.ok) throw new Error("Continental symbol mask: " + res.status);
+      return res.json();
+    }),
+    new Promise(resolve => {
+      sprite.onload = () => { spriteReady = true; resolve(); };
+      sprite.onerror = () => resolve();
+      sprite.src = "/assets/zebrabyte-glyph.svg";
+    })
+  ]).then(([data]) => {
+    if (typeof data.polyline !== "string" || data.points < 1000) throw new Error("Invalid continent mask");
+    decodeLand(data.polyline);
+    if (points.length !== data.points) throw new Error("Incomplete land pattern");
     ready = true;
-    holder.dataset.ready = "true";
+    if (spriteReady) holder.dataset.ready = "true";
     measure();
     sync();
-  };
-  glyph.src = "/assets/zebrabyte-glyph.svg";
+  }).catch(error => {
+    console.warn("ZebraByte abstract continent globe unavailable:", error);
+    // Hero remains readable with its restrained static atmospheric fallback.
+  });
 })();
