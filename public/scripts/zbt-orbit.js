@@ -220,6 +220,12 @@
         elapsed:gl.getUniformLocation(program,"elapsed")
       };
       holder.appendChild(extra);
+      // ResizeObserver may have already measured the original canvases before
+      // this GPU canvas exists. Give the GPU canvas its real pixel dimensions
+      // immediately; otherwise its default 300x150 bitmap becomes stretched.
+      extra.width=Math.round(width*ratio);
+      extra.height=Math.round(height*ratio);
+      uploadGPU();
       inkCanvas.style.display="none";
       holder.dataset.renderer="webgl2";
     } catch(error) {
