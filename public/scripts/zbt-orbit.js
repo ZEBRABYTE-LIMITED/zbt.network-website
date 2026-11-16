@@ -31,10 +31,10 @@
     // Larger, distinct ZebraByte marks: approximate Tempo's visible motif scale.
     // Far fewer logos than the previous 9,000-mark lattice; no mosaic effect.
     const spacing = mobile.matches
-      ? Math.max(11.0, Math.min(13.0, width * .034))
-      : Math.max(11.8, Math.min(14.0, width * .021));
+      ? Math.max(16, Math.min(20, width * .049))
+      : Math.max(18, Math.min(23, width * .030));
     const stepY = spacing * Math.sqrt(3) / 2;
-    const symbol = spacing * .82;
+    const symbol = spacing * .91;
     let row = 0;
     for (let y = -radius; y <= radius; y += stepY, row++) {
       const offset = row % 2 ? spacing/2 : 0;
@@ -45,8 +45,8 @@
         const z=Math.sqrt(1-rr);
         dots.push({
           x:cx+x, y:cy+y, u,v,z,
-          size:symbol * (.85 + .15*Math.pow(z,.50)),
-          fade: .72 + .24*Math.pow(z,.40),
+          size:symbol * (.92 + .08*Math.pow(z,.50)),
+          fade: .82 + .16*Math.pow(z,.40),
           dark:0,
           phase:(row*29 + Math.round(x*5))*0.1569
         });
@@ -309,7 +309,7 @@
     if (canvas.width>1 && Math.abs(nextW-width)<.3 && Math.abs(nextH-height)<.3) return;
     width=nextW;
     height=nextH;
-    ratio=Math.min(devicePixelRatio||1,mobile.matches?2.5:2);
+    ratio=Math.min(devicePixelRatio||1,mobile.matches?3:2.75);
     for (const c of [canvas,inkCanvas]) {
       c.width=Math.round(width*ratio);
       c.height=Math.round(height*ratio);

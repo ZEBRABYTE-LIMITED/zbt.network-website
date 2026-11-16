@@ -256,8 +256,10 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   position: absolute;
   z-index: 1;
   top: 50%;
-  right: -110px;
-  width: min(50vw, 650px);
+  /* Anchored to the original hero's right-hand area, not the copy. */
+  left: calc(50% + 50px);
+  right: auto;
+  width: min(55vw, 780px);
   transform: translateY(-50%);
   background: transparent;
   /* Dedicated right-hand area: no overlap and no gradient that erases symbols. */
@@ -290,13 +292,12 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 .intro-globe-canvas:active { cursor: grabbing; }
 .intro-globe-fallback { display: none; }
 @media (min-width: 1280px) and (max-width: 1399px) {
-  /* Keep the globe fully visible within narrower desktop viewports. */
-  .intro-art { right: -32px; width: min(44vw, 560px); }
+  .intro-art { left: calc(50% + 50px); right: auto; width: min(52vw, 705px); }
 }
 @media (min-width: 1024px) and (max-width: 1279px) {
   .intro { min-height: 715px; }
   .intro-copy { width: 52%; }
-  .intro-art { right: -12px; width: min(44vw, 540px); }
+  .intro-art { left: calc(50% + 50px); right: auto; width: min(52vw, 610px); }
 }
 @media (max-width: 1023px) {
   .intro {
@@ -312,7 +313,9 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   .intro-brand-top { width: 142px; margin-bottom: 22px; }
   .intro-art {
     position: static;
-    width: min(85vw, 570px);
+    left: auto;
+    right: auto;
+    width: min(93vw, 610px);
     max-width: 100%;
     margin: 6px auto 15px;
     transform: none;
@@ -329,7 +332,7 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
     margin-bottom: 0;
   }
   .intro-art {
-    width: min(90vw, 410px);
+    width: min(94vw, 450px);
     margin: 3px auto 15px;
   }
   .intro-paragraphs { font-size: 13px; line-height: 1.58; }
@@ -337,7 +340,7 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 }
 @media (max-width: 360px) {
   .intro-brand-top { width: 121px; margin-bottom: 17px; }
-  .intro-art { width: min(89vw, 325px); margin-block: 0 12px; }
+  .intro-art { width: min(94vw, 340px); margin-block: 0 12px; }
   .intro-copy h1 { font-size: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -369,4 +372,10 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 }
 @media (prefers-reduced-motion: reduce) {
   .intro-globe-base { cursor: default; }
+}
+
+/* Intentional off-screen crop of the oversized orbit on desktop (Tempo-like).
+   Do not shrink the text column or affect any lower website section. */
+@media (min-width: 1024px) {
+  html, body { overflow-x: clip; }
 }
