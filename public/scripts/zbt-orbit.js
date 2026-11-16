@@ -153,7 +153,7 @@
       "out vec4 color;",
       "void main(){",
       "float a=texture(emblem,uv).a;",
-      "color=vec4(.078,.078,.078,a*opacity);",
+      "color=vec4(.95,.95,.95,a*opacity);",
       "}"
     ].join("\n");
     function shader(type,code){
