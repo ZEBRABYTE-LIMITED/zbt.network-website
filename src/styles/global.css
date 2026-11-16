@@ -52,3 +52,78 @@ h2{text-align:center;font-size:clamp(25px,2.2vw,33px);line-height:1.22;font-weig
 .footer-links .separator{opacity:.65}
 @media(max-width:850px){.page-shell,.footer-inner{width:min(100% - 32px,680px)}.intro{grid-template-columns:1fr;padding:48px 0 68px;min-height:unset;gap:32px}.intro-copy{max-width:100%}h1{font-size:clamp(29px,6vw,40px);margin-bottom:35px}.intro-logo{grid-row:1}.intro-logo a{max-width:330px}.services{padding:32px 20px;margin-bottom:45px;border-radius:22px}.services p{font-size:clamp(17px,3vw,23px);line-height:1.6}.faq{padding-inline:0}.partner-logos{grid-template-columns:repeat(3,1fr);gap:30px 18px}.footer-inner{flex-direction:column;padding-block:15px}.footer-links{justify-content:center}}
 @media(max-width:430px){.intro-paragraphs{font-size:14px}.services{padding:26px 13px}.services p{font-size:16px}.partner-logos{grid-template-columns:repeat(2,1fr)}.partners h2{margin-bottom:35px}}
+
+/* ZBT Network: restrained Odoo-inspired layout with consistent optical logo sizing. */
+:root { --content-width: 820px; }
+.page-shell, .footer-inner { width: min(calc(100% - 36px), var(--content-width)); }
+.intro {
+  grid-template-columns: minmax(0, 1.58fr) minmax(0, .95fr);
+  column-gap: 26px;
+  padding: 22px 10px 46px;
+  min-height: 335px;
+}
+.intro-copy { max-width: 485px; }
+h1 { font-size: clamp(22px, 2.5vw, 29px); line-height: 1.16; margin-bottom: 27px; max-width: 475px; }
+.intro-paragraphs { font-size: 11.5px; line-height: 1.62; }
+.intro-paragraphs p, .intro-paragraphs p:nth-child(2) { margin-bottom: 12px; }
+.website-button { margin-top: 12px; font-size: 11px; padding: 9px 12px; }
+.intro-logo a { width: 100%; max-width: 220px; }
+.services { padding: 24px 27px; border-radius: 16px; margin-bottom: 36px; }
+.services p { font-size: clamp(15px, 1.7vw, 17px); line-height: 1.47; }
+h2 { font-size: clamp(20px, 2.2vw, 24px); }
+.faq { padding: 0 12% 31px; }
+.faq-lead { font-size: 11px; margin-bottom: 22px; }
+.faq-accordion { width: min(100%, 575px); }
+.faq-item summary { padding: 12px 9px; font-size: 11px; }
+.faq-answer { font-size: 11px; padding: 0 9px 12px; }
+.partners { padding: 10px 0 34px; }
+.partners h2 { margin-bottom: 25px; }
+.partner-logos {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: center;
+  gap: 15px;
+}
+.partner { height: 64px; overflow: hidden; }
+.partner img {
+  display: block; width: 100%; max-width: 125px; height: 52px;
+  max-height: 52px; object-fit: contain; margin: 0 auto;
+}
+.partner--vercara img { max-height: 47px; height: 47px; }
+.partner--cloudflare img { max-height: 64px; height: 64px; }
+.partner--insecureweb img { max-height: 44px; height: 44px; }
+.partner--twentyi img { max-height: 37px; height: 37px; max-width: 82px; }
+.partner--newfold img { max-height: 42px; height: 42px; }
+.partner--zb img { max-height: 50px; height: 50px; max-width: 72px; }
+.footer { background: transparent; min-height: 0; }
+.footer-inner {
+  background: #000; min-height: 39px;
+  padding: 7px 12px; gap: 16px;
+}
+.footer-brand { width: 100px; flex: 0 0 auto; }
+.footer-links { font-size: 9px; gap: 4px; }
+@media (min-width: 701px) and (max-width: 850px) {
+  .intro { display: grid; grid-template-columns: minmax(0, 1.58fr) minmax(0, .95fr); gap: 26px; min-height: 335px; padding: 22px 10px 46px; }
+  .intro-logo { grid-row: auto; }
+  .partner-logos { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .footer-inner { flex-direction: row; }
+}
+@media (max-width: 700px) {
+  .page-shell, .footer-inner { width: min(calc(100% - 30px), 580px); }
+  .intro { grid-template-columns: 1fr; gap: 18px; min-height: 0; padding: 30px 0 36px; }
+  .intro-logo { grid-row: 1; }
+  .intro-logo a { max-width: 180px; }
+  h1 { font-size: clamp(22px, 5vw, 29px); margin-bottom: 23px; }
+  .intro-paragraphs { font-size: 13px; }
+  .services { padding: 23px 16px; border-radius: 15px; margin-bottom: 37px; }
+  .services p { font-size: 15px; }
+  .faq { padding: 0 0 32px; }
+  .faq-item summary, .faq-answer { font-size: 12px; }
+  .partners { padding-bottom: 29px; }
+  .partner-logos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 14px; }
+  .footer-inner { flex-direction: column; gap: 8px; padding: 11px; }
+  .footer-links { justify-content: center; text-align: center; }
+}
+@media (max-width: 360px) {
+  .partner-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .services p { font-size: 14px; }
+}
