@@ -1,324 +1,295 @@
 (() => {
   "use strict";
 
-  const canvas = document.getElementById("zbt-globe");
-  const ctx = canvas?.getContext?.("2d", { alpha: true });
-  if (!canvas || !ctx) return;
+  const base = document.getElementById("zbt-orbit-base");
+  const landCanvas = document.getElementById("zbt-orbit-land");
+  const effectCanvas = document.getElementById("zbt-orbit-effects");
+  if (!base || !landCanvas || !effectCanvas) return;
+  const baseCtx = base.getContext("2d", {alpha:true});
+  const landCtx = landCanvas.getContext("2d", {alpha:true});
+  const fxCtx = effectCanvas.getContext("2d", {alpha:true});
+  if (!baseCtx || !landCtx || !fxCtx) return;
 
-  const holder = canvas.parentElement;
+  const stage = base.parentElement;
+  const hero = stage.closest(".tempo-hero");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  const smallScreen = matchMedia("(max-width: 760px)");
+  const mobile = matchMedia("(max-width: 760px)");
   const RAD = Math.PI / 180;
-  const glyph = new Image();
-  const ledGlyph = new Image();
-  glyph.decoding = "async";
-  ledGlyph.decoding = "async";
+  const imgs = [
+    "/assets/zebrabyte-glyph-ocean.svg",
+    "/assets/zebrabyte-glyph-land.svg",
+    "/assets/zebrabyte-glyph-led.svg"
+  ].map(src => {
+    const image = new Image();
+    image.decoding = "async";
+    image.src = src;
+    return image;
+  });
 
-  // This cached layer never rotates. Its faint monograms suggest depth while
-  // a separate, brighter layer rotates in front of it.
-  const staticCanvas = document.createElement("canvas");
-  const staticCtx = staticCanvas.getContext("2d", { alpha: true });
-  if (!staticCtx) return;
+  const ocean = [];
+  const land = [];
+  const stars = [];
+  let w = 1, h = 1, dpr = 1;
+  let cx = 1, cy = 1, radius = 1, size = 9;
+  let ready = false, visible = true, dragging = false;
+  let longitude = 0.18, incline = 0.17;
+  let lastX = 0, lastY = 0, frame = 0, previous = 0, lastDraw = 0;
 
-  const rawLand = [];
-  let movingDesktop = [], movingMobile = [];
-  let staticDesktop = [], staticMobile = [];
-  let staticLights = [];
-  let width = 1, height = 1, dpr = 1;
-  let ready = false, rotation = 8 * RAD, tilt = 14 * RAD;
-  let frame = 0, lastTime = 0, lastPaint = 0;
-  let visible = true, dragging = false, pointerX = 0, pointerY = 0;
+  // Equal-area Fibonacci distribution. The ocean layer covers the *entire*
+  // visible hemisphere, unlike a continent-only particle mask.
+  const oceanCount = 12350;
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < oceanCount; i++) {
+    const latitude = 1 - ((i + .5) / oceanCount) * 2;
+    const ring = Math.sqrt(1 - latitude * latitude);
+    const azimuth = i * golden;
+    ocean.push([Math.sin(azimuth) * ring, latitude, Math.cos(azimuth) * ring]);
+  }
 
+  // Stable star positions; no random flashing each frame.
+  for (let i = 0; i < 145; i++) {
+    const x = (Math.sin(i * 127.1 + 12.7) * 43758.5453) % 1;
+    const y = (Math.sin(i * 311.7 + 43.1) * 20537.8311) % 1;
+    stars.push({x:Math.abs(x),y:Math.abs(y),power:((i * 29) % 9)/9});
+  }
+
+  // Public-domain Natural Earth land mask encoded with 1/100° precision.
   function decodeLand(encoded) {
-    let index = 0, longitude = 0, latitude = 0;
+    let index = 0, lon = 0, lat = 0;
     while (index < encoded.length) {
-      const values = [];
-      for (let channel = 0; channel < 2; channel++) {
-        let value = 0, shift = 0, part;
+      const deltas = [];
+      for (let axis = 0; axis < 2; axis++) {
+        let value = 0, shift = 0, part = 0;
         do {
-          if (index >= encoded.length) throw new Error("Incomplete ZebraByte globe geometry");
+          if (index >= encoded.length) throw new Error("Invalid geographic data");
           part = encoded.charCodeAt(index++) - 63;
           value |= (part & 31) << shift;
           shift += 5;
         } while (part >= 32);
-        values.push((value & 1) ? ~(value >> 1) : value >> 1);
+        deltas.push(value & 1 ? ~(value >> 1) : value >> 1);
       }
-      longitude += values[0];
-      latitude += values[1];
-      const lambda = longitude / 100 * RAD;
-      const phi = latitude / 100 * RAD;
-      const cosPhi = Math.cos(phi);
-      rawLand.push([cosPhi * Math.sin(lambda), Math.sin(phi), cosPhi * Math.cos(lambda)]);
+      lon += deltas[0];
+      lat += deltas[1];
+      const lambda = lon / 100 * RAD;
+      const phi = lat / 100 * RAD;
+      const c = Math.cos(phi);
+      land.push([Math.sin(lambda)*c,Math.sin(phi),Math.cos(lambda)*c]);
     }
   }
 
-  // Controlled spacing on the sphere prevents clumps of tiny overlapping logos.
-  function distributeLand(minDegrees) {
-    const chord = 2 * Math.sin((minDegrees * RAD) / 2);
-    const limit = chord * chord;
-    const buckets = new Map();
-    const chosen = [];
-    const order = rawLand.map((_, i) => i);
-    order.sort((a, b) =>
-      (Math.imul(a + 1, 2654435761) >>> 0) -
-      (Math.imul(b + 1, 2654435761) >>> 0)
-    );
+  // Project onto the hemisphere facing the viewer, preserving the rounded
+  // form of the symbol-built planet without drawing a solid disk.
+  function project(p, angle, tilt) {
+    const co = Math.cos(angle), si = Math.sin(angle);
+    const ct = Math.cos(tilt), st = Math.sin(tilt);
+    const x = p[0]*co - p[2]*si;
+    const front = p[2]*co + p[0]*si;
+    const y = p[1]*ct - front*st;
+    const z = p[1]*st + front*ct;
+    return [cx + x*radius,cy - y*radius,z];
+  }
 
-    for (const index of order) {
-      const point = rawLand[index];
-      const x = Math.floor((point[0] + 1) / chord);
-      const y = Math.floor((point[1] + 1) / chord);
-      const z = Math.floor((point[2] + 1) / chord);
-      let overlap = false;
-      for (let dx = -1; dx <= 1 && !overlap; dx++) {
-        for (let dy = -1; dy <= 1 && !overlap; dy++) {
-          for (let dz = -1; dz <= 1 && !overlap; dz++) {
-            const neighbours = buckets.get((x+dx) + ":" + (y+dy) + ":" + (z+dz));
-            if (!neighbours) continue;
-            for (const near of neighbours) {
-              const a = point[0]-near[0], b = point[1]-near[1], c = point[2]-near[2];
-              if (a*a + b*b + c*c < limit) { overlap = true; break; }
-            }
+  // Fixed ocean screen-space glyphs remain stationary; animated continents
+  // will turn over this lattice. Sphere never has a colored background.
+  function drawOcean() {
+    baseCtx.clearRect(0,0,w,h);
+    const sprite = imgs[0];
+    for (const p of ocean) {
+      const [x,y,z] = project(p,-.10,.14);
+      if (z < .025) continue;
+      const edge = Math.pow(z,.54);
+      const glyphSize = size * (.8 + .2*z);
+      baseCtx.globalAlpha = .31 + .50*edge;
+      baseCtx.drawImage(sprite,x-glyphSize/2,y-glyphSize/2,glyphSize,glyphSize);
+    }
+    baseCtx.globalAlpha=1;
+  }
+
+  function drawLand(time) {
+    landCtx.clearRect(0,0,w,h);
+    const sprite = imgs[1], led = imgs[2];
+    const symbols = [];
+    const spacing = size*.90;
+    const spacingSquared = spacing*spacing;
+    for (let i=0;i<land.length;i++) {
+      const [x,y,z]=project(land[i],longitude,incline);
+      if (z <= .04) continue;
+      symbols.push({x,y,z,id:i});
+    }
+    // Front-first for stable non-overlapping marks on the near hemisphere.
+    symbols.sort((a,b)=>b.z-a.z);
+    const bins=new Map();
+    for (const mark of symbols) {
+      const col=Math.floor(mark.x/spacing),row=Math.floor(mark.y/spacing);
+      let collision=false;
+      for (let dx=-1;dx<=1 && !collision;dx++) {
+        for (let dy=-1;dy<=1 && !collision;dy++) {
+          const others=bins.get((col+dx)+":"+(row+dy));
+          if (!others) continue;
+          for (const other of others) {
+            const dX=other.x-mark.x,dY=other.y-mark.y;
+            if (dX*dX+dY*dY < spacingSquared){collision=true;break;}
           }
         }
       }
-      if (overlap) continue;
-      chosen.push(point);
-      const key = x + ":" + y + ":" + z;
-      if (!buckets.has(key)) buckets.set(key, []);
-      buckets.get(key).push(point);
-    }
-    return chosen;
-  }
-
-  function project(point, angle, incline, centreX, centreY, radius) {
-    const cs = Math.cos(angle), sn = Math.sin(angle);
-    const ct = Math.cos(incline), st = Math.sin(incline);
-    const x = point[0] * cs - point[2] * sn;
-    const forward = point[2] * cs + point[0] * sn;
-    const y = point[1] * ct - forward * st;
-    const depth = point[1] * st + forward * ct;
-    return {
-      x: centreX + x * radius,
-      y: centreY - y * radius,
-      depth
-    };
-  }
-
-  // The screen-space filter runs after projection: a mark on the far side
-  // cannot visually collide with or obscure a mark on the near side.
-  function visibleMarks(points, angle, incline, spacing) {
-    const cx = width / 2, cy = height / 2;
-    const radius = Math.min(width, height) * .46;
-    const projected = [];
-    for (let i=0; i<points.length; i++) {
-      const item = project(points[i], angle, incline, cx, cy, radius);
-      if (item.depth > .055) projected.push({ ...item, id:i });
-    }
-    projected.sort((a, b) => b.depth - a.depth);
-    const bins = new Map();
-    const filtered = [];
-    const distance = spacing * spacing;
-    for (const item of projected) {
-      const gx = Math.floor(item.x / spacing), gy = Math.floor(item.y / spacing);
-      let collides = false;
-      for (let x=-1; x<=1 && !collides; x++) {
-        for (let y=-1; y<=1 && !collides; y++) {
-          const adjacent = bins.get((gx+x)+":"+(gy+y));
-          if (!adjacent) continue;
-          for (const other of adjacent) {
-            const dx=item.x-other.x, dy=item.y-other.y;
-            if (dx*dx + dy*dy < distance) { collides=true; break; }
-          }
+      if(collision)continue;
+      const key=col+":"+row;
+      if(!bins.has(key))bins.set(key,[]);
+      bins.get(key).push(mark);
+      const depth=Math.sqrt(mark.z);
+      const s=size*(.86+.14*mark.z);
+      landCtx.globalAlpha=.59+.40*depth;
+      landCtx.drawImage(sprite,mark.x-s/2,mark.y-s/2,s,s);
+      if(mark.id % 32 === 0) {
+        const wave = .5 + .5*Math.sin(time*.0012+mark.id*1.618);
+        const pulse=Math.pow(wave,11);
+        if(pulse>.12) {
+          const bright=s*(1+pulse*.10);
+          landCtx.globalAlpha=pulse*.46;
+          landCtx.drawImage(led,mark.x-bright/2,mark.y-bright/2,bright,bright);
         }
       }
-      if (collides) continue;
-      const key=gx+":"+gy;
-      if(!bins.has(key)) bins.set(key,[]);
-      bins.get(key).push(item);
-      filtered.push(item);
     }
-    return filtered;
+    landCtx.globalAlpha=1;
   }
 
-  function dimensions() {
-    const radius = Math.min(width, height) * .46;
-    const mobile = smallScreen.matches;
-    const frontSize = mobile
-      ? Math.max(8.4, Math.min(10.5, radius * .062))
-      : Math.max(12, Math.min(15, radius * .048));
-    return {
-      frontSize,
-      backSize: frontSize * .83,
-      mobile
-    };
-  }
-
-  function paintStaticLayer() {
-    if (!ready) return;
-    staticCanvas.width = canvas.width;
-    staticCanvas.height = canvas.height;
-    staticCtx.setTransform(dpr,0,0,dpr,0,0);
-    staticCtx.clearRect(0,0,width,height);
-    staticLights = [];
-
-    const sizes = dimensions();
-    const points = sizes.mobile ? staticMobile : staticDesktop;
-    // A small perspective difference makes the ghost layer visible even
-    // when the front globe is close to its original orientation.
-    const background = visibleMarks(points, -13 * RAD, 13 * RAD, sizes.backSize * .92);
-    for (const mark of background) {
-      const size = sizes.backSize * (.85 + .14 * mark.depth);
-      staticCtx.globalAlpha = .10 + .16 * Math.sqrt(mark.depth);
-      staticCtx.drawImage(glyph, mark.x - size / 2, mark.y - size / 2, size, size);
-      // These positions do not move. Selected ones glow gently like LEDs.
-      if (mark.id % 13 === 0) {
-        staticLights.push({ ...mark, size, phase: mark.id * 2.399 });
-      }
+  function drawEffects(time) {
+    fxCtx.clearRect(0,0,w,h);
+    // Sparse dust is a subtle monochrome counterpart of Tempo's starfield.
+    for(const star of stars) {
+      const alpha=.08 + star.power*.12;
+      fxCtx.globalAlpha=alpha;
+      fxCtx.fillStyle="#2b2b2b";
+      fxCtx.beginPath();
+      fxCtx.arc(star.x*w,star.y*h,star.power>.75?1.3:.75,0,2*Math.PI);
+      fxCtx.fill();
     }
-    staticCtx.globalAlpha=1;
-  }
-
-  function pulse(time, phase) {
-    const wave = .5 + .5 * Math.sin(time * .00155 + phase);
-    return Math.pow(wave, 9);
-  }
-
-  function paintLEDs(context, lights, time, moving) {
-    for (const mark of lights) {
-      const strength = pulse(time, mark.phase);
-      if (strength < .14) continue;
-      context.save();
-      context.globalAlpha = strength * (moving ? .86 : .43);
-      context.shadowColor = "#b35bec";
-      context.shadowBlur = moving ? 10 : 7;
-      const size=mark.size * (1 + strength * .13);
-      context.drawImage(
-        ledGlyph,mark.x-size/2,mark.y-size/2,size,size
-      );
-      context.restore();
+    fxCtx.globalAlpha=1;
+    if(reducedMotion.matches)return;
+    // Two original elliptical ribbons, almost invisible except for a spark.
+    for(let i=0;i<2;i++) {
+      const span=i===0?1.03:.83;
+      const angle=i===0?-.22:.33;
+      const travel=time*.00018+i*.39;
+      const x0=cx-radius*span, x1=cx+radius*span;
+      const y0=cy+radius*angle, y1=cy-radius*angle;
+      fxCtx.beginPath();
+      fxCtx.moveTo(x0,y0);
+      fxCtx.bezierCurveTo(cx-radius*.43,cy-radius*(.2+i*.3),cx+radius*.40,cy+radius*(.22-i*.3),x1,y1);
+      fxCtx.strokeStyle=i===0?"rgba(30,30,30,.09)":"rgba(70,70,70,.06)";
+      fxCtx.lineWidth=1;
+      fxCtx.stroke();
+      const t=((travel%1)+1)%1;
+      const s=1-t;
+      const px=s*s*s*x0+3*s*s*t*(cx-radius*.43)+3*s*t*t*(cx+radius*.40)+t*t*t*x1;
+      const py=s*s*s*y0+3*s*s*t*(cy-radius*(.2+i*.3))+3*s*t*t*(cy+radius*(.22-i*.3))+t*t*t*y1;
+      fxCtx.beginPath();
+      fxCtx.fillStyle="#272727";
+      fxCtx.globalAlpha=.30;
+      fxCtx.shadowColor="#555";
+      fxCtx.shadowBlur=8;
+      fxCtx.arc(px,py,i===0?2.3:1.7,0,2*Math.PI);
+      fxCtx.fill();
+      fxCtx.shadowBlur=0;
+      fxCtx.globalAlpha=1;
     }
   }
 
-  function render(now=0) {
-    if (!ready) return;
-    ctx.clearRect(0,0,width,height);
-    ctx.drawImage(staticCanvas,0,0,width,height);
-
-    const stationaryTime = reducedMotion.matches ? 0 : now;
-    paintLEDs(ctx, staticLights, stationaryTime, false);
-
-    const sizes=dimensions();
-    const front=visibleMarks(
-      sizes.mobile ? movingMobile : movingDesktop,
-      rotation,tilt,sizes.frontSize*.84
-    );
-    const movingLights=[];
-    for(const mark of front) {
-      const depthGlow=Math.pow(mark.depth,.58);
-      const size=sizes.frontSize*(.89+.11*mark.depth);
-      ctx.globalAlpha=.44+.44*depthGlow;
-      ctx.drawImage(glyph,mark.x-size/2,mark.y-size/2,size,size);
-      if(mark.id%15===0) {
-        movingLights.push({...mark,size,phase:mark.id*1.721});
-      }
+  function measure() {
+    const rect=stage.getBoundingClientRect();
+    const nextW=Math.max(1,rect.width),nextH=Math.max(1,rect.height);
+    if (Math.abs(nextW-w)<.3 && Math.abs(nextH-h)<.3 && base.width>1)return;
+    w=nextW;h=nextH;
+    const isMobile=mobile.matches;
+    dpr=Math.min(devicePixelRatio||1,isMobile?1.5:2);
+    cx=w*(isMobile?.18:.22);
+    cy=h*(isMobile?.49:.53);
+    radius=isMobile?Math.min(w*.99,h*.57):Math.min(w*.44,h*.69);
+    size=Math.min(15.5,Math.max(8.1,radius*.022));
+    for (const c of [base,landCanvas,effectCanvas]){
+      c.width=Math.round(w*dpr);
+      c.height=Math.round(h*dpr);
     }
-    ctx.globalAlpha=1;
-    paintLEDs(ctx,movingLights,stationaryTime,true);
-  }
-
-  function resize() {
-    const rect=canvas.getBoundingClientRect();
-    const nextW=Math.max(1,rect.width);
-    const nextH=Math.max(1,rect.height);
-    if(canvas.width && Math.abs(nextW-width)<.3 && Math.abs(nextH-height)<.3)return;
-    width=nextW;
-    height=nextH;
-    dpr=Math.min(window.devicePixelRatio||1, smallScreen.matches?2.5:2);
-    canvas.width=Math.round(width*dpr);
-    canvas.height=Math.round(height*dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    paintStaticLayer();
-    render(reducedMotion.matches?0:performance.now());
+    for(const context of [baseCtx,landCtx,fxCtx])
+      context.setTransform(dpr,0,0,dpr,0,0);
+    if(ready){
+      drawOcean();
+      drawLand(0);
+      drawEffects(0);
+    }
   }
 
   function stop() {
     if(frame)cancelAnimationFrame(frame);
-    frame=0;
-    lastTime=0;
-    lastPaint=0;
+    frame=0;previous=0;lastDraw=0;
   }
 
   function animate(now) {
     frame=0;
-    if(!visible || reducedMotion.matches || document.hidden)return;
-    const seconds=lastTime?Math.min(.08,(now-lastTime)/1000):0;
-    lastTime=now;
-    if(!dragging)rotation+=seconds*.105;
-    const every=smallScreen.matches?65:38;
-    if(now-lastPaint>=every) {
-      render(now);
-      lastPaint=now;
+    if(!visible||document.hidden||reducedMotion.matches)return;
+    const dt=previous?Math.min(.07,(now-previous)/1000):0;
+    previous=now;
+    if(!dragging)longitude+=dt*.082;
+    if(now-lastDraw>=(mobile.matches?47:33)) {
+      drawLand(now);
+      drawEffects(now);
+      lastDraw=now;
     }
     frame=requestAnimationFrame(animate);
   }
 
   function sync() {
     stop();
-    render(reducedMotion.matches?0:performance.now());
-    if(ready && visible && !reducedMotion.matches && !document.hidden)
+    if(!ready)return;
+    drawLand(0);
+    drawEffects(0);
+    if(visible&&!document.hidden&&!reducedMotion.matches)
       frame=requestAnimationFrame(animate);
   }
 
-  canvas.addEventListener("pointerdown", e => {
-    if(smallScreen.matches || reducedMotion.matches)return;
-    dragging=true;pointerX=e.clientX;pointerY=e.clientY;
-    canvas.setPointerCapture(e.pointerId);
+  base.addEventListener("pointerdown",e=>{
+    if(reducedMotion.matches)return;
+    dragging=true;lastX=e.clientX;lastY=e.clientY;
+    base.setPointerCapture(e.pointerId);
   });
-  canvas.addEventListener("pointermove", e => {
+  base.addEventListener("pointermove",e=>{
     if(!dragging)return;
-    rotation-=(e.clientX-pointerX)*.003;
-    tilt=Math.max(-.85,Math.min(.85,tilt+(e.clientY-pointerY)*.002));
-    pointerX=e.clientX;pointerY=e.clientY;
-    render(performance.now());
+    longitude-=(e.clientX-lastX)*.0037;
+    incline=Math.max(-.8,Math.min(.8,incline+(e.clientY-lastY)*.0022));
+    lastX=e.clientX;lastY=e.clientY;
+    drawLand(performance.now());
   });
-  for(const event of ["pointerup","pointercancel","lostpointercapture"])
-    canvas.addEventListener(event,()=>{dragging=false;});
+  for(const type of ["pointerup","pointercancel","lostpointercapture"])
+    base.addEventListener(type,()=>{dragging=false;});
 
-  new ResizeObserver(resize).observe(canvas);
+  new ResizeObserver(measure).observe(stage);
   new IntersectionObserver(entries=>{
-    visible=Boolean(entries[0]?.isIntersecting);
+    visible=!!entries[0]?.isIntersecting;
     sync();
-  },{rootMargin:"100px"}).observe(holder);
+  },{rootMargin:"120px"}).observe(hero);
   document.addEventListener("visibilitychange",sync);
   reducedMotion.addEventListener?.("change",sync);
 
   Promise.all([
-    fetch("/data/zbt-continent-dots.json",{cache:"force-cache"}).then(res=>{
-      if(!res.ok)throw new Error("Globe geography "+res.status);
-      return res.json();
+    fetch("/data/zbt-continent-dots.json",{cache:"force-cache"}).then(response=>{
+      if(!response.ok)throw new Error("Unable to load land mask");
+      return response.json();
     }),
-    Promise.all([glyph,ledGlyph].map((image,i)=>new Promise(resolve=>{
+    Promise.all(imgs.map(image=>new Promise(resolve=>{
+      if(image.complete&&image.naturalWidth){resolve(true);return;}
       image.onload=()=>resolve(true);
       image.onerror=()=>resolve(false);
-      image.src=i?"/assets/zebrabyte-glyph-led.svg":"/assets/zebrabyte-glyph.svg";
     })))
-  ]).then(([data,images])=>{
-    if(!images.every(Boolean))throw new Error("Globe emblem unavailable");
+  ]).then(([data,success])=>{
+    if(!success.every(Boolean))throw new Error("ZebraByte emblem assets unavailable");
     if(typeof data.polyline!=="string"||data.points<1000)
-      throw new Error("Invalid globe geometry");
+      throw new Error("Invalid continent geometry");
     decodeLand(data.polyline);
-    if(rawLand.length!==data.points)throw new Error("Incomplete globe geometry");
-    movingDesktop=distributeLand(3.1);
-    movingMobile=distributeLand(4.1);
-    staticDesktop=distributeLand(2.5);
-    staticMobile=distributeLand(3.7);
-    rawLand.length=0;
+    if(land.length!==data.points)throw new Error("Incomplete continent mask");
     ready=true;
-    holder.dataset.ready="true";
-    resize();
+    stage.dataset.ready="true";
+    measure();
+    drawOcean();
     sync();
-  }).catch(error=>{
-    console.warn("ZebraByte globe unavailable:",error);
-  });
+  }).catch(error=>console.warn("ZebraByte globe:",error));
 })();
