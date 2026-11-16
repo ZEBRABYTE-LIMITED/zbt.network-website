@@ -1,0 +1,4 @@
+# Allow indexing bots to read the noindex directive in the HTML.
+# A robots.txt Disallow: / would prevent crawlers from seeing noindex.
+User-agent: *
+Allow: /
