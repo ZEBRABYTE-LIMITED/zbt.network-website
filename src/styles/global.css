@@ -437,3 +437,21 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   .intro--orbital .website-button { transition: none; }
   .intro-globe-canvas { cursor: default; }
 }
+
+/* Finish the dark-to-light transition and give the service banner breathing room. */
+.intro--orbital + .services { margin-top: 78px; }
+.intro--orbital .intro-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 7px 12px;
+  background: rgba(150, 122, 201, .12);
+  border: 1px solid rgba(182, 157, 229, .18);
+  border-radius: 999px;
+  color: #bfb0df;
+  letter-spacing: .095em;
+}
+@media (max-width: 760px) {
+  .intro--orbital + .services { margin-top: 56px; }
+  .intro--orbital .intro-eyebrow { padding: 7px 10px; font-size: 9px; letter-spacing: .075em; }
+}
