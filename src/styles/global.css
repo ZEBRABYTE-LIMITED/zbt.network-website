@@ -241,6 +241,10 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   width: 54%;
   max-width: 650px;
 }
+.intro-copy > :not(.intro-art) {
+  position: relative;
+  z-index: 2;
+}
 .intro-brand-top {
   display: inline-block;
   width: 150px;
@@ -256,8 +260,8 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   width: min(66vw, 830px);
   transform: translateY(-50%);
   background: transparent;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #00000016 8%, #000 30%, #000 100%);
-  mask-image: linear-gradient(to right, transparent 0%, #00000016 8%, #000 30%, #000 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #00000016 9%, #000 34%, #000 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #00000016 9%, #000 34%, #000 100%);
 }
 .zbt-emblem-globe {
   position: relative;
