@@ -169,7 +169,7 @@
     const background = visibleMarks(points, -13 * RAD, 13 * RAD, sizes.backSize * .92);
     for (const mark of background) {
       const size = sizes.backSize * (.85 + .14 * mark.depth);
-      staticCtx.globalAlpha = .09 + .15 * Math.sqrt(mark.depth);
+      staticCtx.globalAlpha = .10 + .16 * Math.sqrt(mark.depth);
       staticCtx.drawImage(glyph, mark.x - size / 2, mark.y - size / 2, size, size);
       // These positions do not move. Selected ones glow gently like LEDs.
       if (mark.id % 13 === 0) {
@@ -190,7 +190,7 @@
       if (strength < .14) continue;
       context.save();
       context.globalAlpha = strength * (moving ? .86 : .43);
-      context.shadowColor = "#b99cff";
+      context.shadowColor = "#b35bec";
       context.shadowBlur = moving ? 10 : 7;
       const size=mark.size * (1 + strength * .13);
       context.drawImage(
@@ -217,7 +217,7 @@
     for(const mark of front) {
       const depthGlow=Math.pow(mark.depth,.58);
       const size=sizes.frontSize*(.89+.11*mark.depth);
-      ctx.globalAlpha=.39+.43*depthGlow;
+      ctx.globalAlpha=.44+.44*depthGlow;
       ctx.drawImage(glyph,mark.x-size/2,mark.y-size/2,size,size);
       if(mark.id%15===0) {
         movingLights.push({...mark,size,phase:mark.id*1.721});
