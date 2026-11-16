@@ -39,6 +39,10 @@ jobs:
           for asset in zebrabyte-black.svg zebrabyte-white.svg favicon.svg vercara.webp cloudflare.webp xcitium.svg telekom-business-partner.webp 20i.svg newfold.svg iubenda-bronze.png logo-seap.webp zb-partner.webp; do
             test -s "dist/assets/$asset"
           done
+          test -s dist/assets/zebrabyte-glyph.svg
+          test -s dist/scripts/zbt-orbit.js
+          test -s dist/data/zbt-continent-dots.json
+          grep -q 'id="zbt-globe"' dist/index.html
           test ! -f dist/sitemap.xml
           printf 'www.zbt.network\n' > dist/CNAME
           touch dist/.nojekyll
