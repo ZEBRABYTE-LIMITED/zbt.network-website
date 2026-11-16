@@ -28,11 +28,13 @@
     dots = [];
     const cx = width / 2, cy = height / 2;
     radius = Math.min(width, height) * .473;
+    // Larger, distinct ZebraByte marks: approximate Tempo's visible motif scale.
+    // Far fewer logos than the previous 9,000-mark lattice; no mosaic effect.
     const spacing = mobile.matches
-      ? Math.max(5.4, Math.min(6.5, width * .0175))
-      : Math.max(6.3, Math.min(8.0, width * .0093));
+      ? Math.max(11.0, Math.min(13.0, width * .034))
+      : Math.max(11.8, Math.min(14.0, width * .021));
     const stepY = spacing * Math.sqrt(3) / 2;
-    const symbol = spacing * .72;
+    const symbol = spacing * .82;
     let row = 0;
     for (let y = -radius; y <= radius; y += stepY, row++) {
       const offset = row % 2 ? spacing/2 : 0;
@@ -43,8 +45,8 @@
         const z=Math.sqrt(1-rr);
         dots.push({
           x:cx+x, y:cy+y, u,v,z,
-          size:symbol * (.68 + .32*Math.pow(z,.43)),
-          fade: .32 + .66*Math.pow(z,.48),
+          size:symbol * (.85 + .15*Math.pow(z,.50)),
+          fade: .72 + .24*Math.pow(z,.40),
           dark:0,
           phase:(row*29 + Math.round(x*5))*0.1569
         });

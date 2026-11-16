@@ -238,8 +238,8 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 .intro-copy {
   /* Keep the absolute globe positioned against .intro, not this text column. */
   position: static;
-  width: 54%;
-  max-width: 650px;
+  width: 52%;
+  max-width: 620px;
 }
 .intro-copy > :not(.intro-art) {
   position: relative;
@@ -256,12 +256,13 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
   position: absolute;
   z-index: 1;
   top: 50%;
-  right: max(-125px, calc(598px - 50vw));
-  width: min(66vw, 830px);
+  right: -110px;
+  width: min(50vw, 650px);
   transform: translateY(-50%);
   background: transparent;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #00000016 9%, #000 34%, #000 100%);
-  mask-image: linear-gradient(to right, transparent 0%, #00000016 9%, #000 34%, #000 100%);
+  /* Dedicated right-hand area: no overlap and no gradient that erases symbols. */
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 .zbt-emblem-globe {
   position: relative;
@@ -288,10 +289,10 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 }
 .intro-globe-canvas:active { cursor: grabbing; }
 .intro-globe-fallback { display: none; }
-@media (min-width: 1024px) and (max-width: 1199px) {
+@media (min-width: 1024px) and (max-width: 1279px) {
   .intro { min-height: 715px; }
   .intro-copy { width: 52%; }
-  .intro-art { right: -12px; width: min(57vw, 630px); }
+  .intro-art { right: -12px; width: min(44vw, 540px); }
 }
 @media (max-width: 1023px) {
   .intro {
