@@ -227,74 +227,103 @@ h2 { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.24; font-weight: 700; t
 }
 
 
-/* Hero enhancement only: original white design and all lower sections unchanged. */
-.intro { position: relative; display: block; min-height: 640px; padding: 46px 0 67px 12px; }
-.intro-copy { width: 56%; max-width: 675px; }
-.intro-brand-top { display: inline-block; width: 150px; max-width: 48%; margin-bottom: 27px; }
+/* Hero: an oversized, entirely transparent ZebraByte symbol globe.
+   Never draw a disk, border, glow, or sphere backdrop. */
+.intro {
+  position: relative;
+  display: block;
+  min-height: 665px;
+  padding: 46px 0 68px 12px;
+}
+.intro-copy {
+  position: relative;
+  z-index: 2;
+  width: 54%;
+  max-width: 650px;
+}
+.intro-brand-top {
+  display: inline-block;
+  width: 150px;
+  max-width: 48%;
+  margin-bottom: 27px;
+}
 .intro-brand-top img { display: block; width: 100%; height: auto; }
 .intro-art {
   position: absolute;
   z-index: 1;
   top: 50%;
-  right: 0;
-  width: min(40%, 450px);
+  right: -82px;
+  width: min(52vw, 620px);
   transform: translateY(-50%);
+  background: transparent;
 }
 .zbt-emblem-globe {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  overflow: hidden;
-  background: radial-gradient(circle at 30% 23%, #322646 0%, #1b1527 56%, #0a0913 100%);
-  box-shadow: inset 0 0 0 1px #665777, 0 18px 45px #24163424;
+  aspect-ratio: 1;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
+.zbt-emblem-globe::before,
 .zbt-emblem-globe::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at 50% 48%, transparent 48%, #09071126 78%, #09071167 100%);
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 .intro-globe-canvas {
   display: block;
   width: 100%;
   height: 100%;
+  background: transparent;
   cursor: grab;
   touch-action: pan-y;
 }
 .intro-globe-canvas:active { cursor: grabbing; }
-.intro-globe-fallback {
-  position: absolute;
-  inset: 19%;
-  border-radius: 50%;
-  background: radial-gradient(circle, #8465ad45, transparent 77%);
-  pointer-events: none;
+.intro-globe-fallback { display: none; }
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .intro-copy { width: 52%; }
+  .intro-art { right: -38px; width: min(49vw, 550px); }
 }
-.zbt-emblem-globe[data-ready="true"] .intro-globe-fallback { display: none; }
 @media (max-width: 1023px) {
-  .intro { display: block; min-height: 0; padding: 36px 4px 50px; }
-  .intro-copy { width: 100%; max-width: 760px; margin-inline: auto; }
-  .intro-brand-top { margin-bottom: 22px; width: 142px; }
+  .intro {
+    display: block;
+    min-height: 0;
+    padding: 33px 4px 47px;
+  }
+  .intro-copy {
+    width: 100%;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+  .intro-brand-top { width: 142px; margin-bottom: 22px; }
   .intro-art {
     position: static;
-    width: min(51vw, 330px);
-    margin: 19px auto 29px;
+    width: min(74vw, 400px);
+    max-width: 100%;
+    margin: 8px auto 13px;
     transform: none;
   }
 }
 @media (max-width: 600px) {
-  .intro { padding: 28px 2px 39px; }
+  .intro { padding: 28px 2px 38px; }
   .intro-brand-top { width: 132px; margin-bottom: 19px; }
-  .intro-copy h1 { font-size: clamp(25px, 6.7vw, 31px); line-height: 1.16; margin-bottom: 0; }
-  .intro-art { width: min(57vw, 236px); margin: 20px auto 23px; }
+  .intro-copy h1 {
+    font-size: clamp(25px, 6.7vw, 31px);
+    line-height: 1.16;
+    margin-bottom: 0;
+  }
+  .intro-art {
+    width: min(78vw, 340px);
+    margin: 4px auto 12px;
+  }
   .intro-paragraphs { font-size: 13px; line-height: 1.58; }
   .intro-paragraphs p { margin-bottom: 13px; }
 }
 @media (max-width: 360px) {
   .intro-brand-top { width: 121px; margin-bottom: 17px; }
-  .intro-art { width: min(57vw, 202px); margin-block: 16px 21px; }
+  .intro-art { width: min(78vw, 270px); margin-block: 0 10px; }
   .intro-copy h1 { font-size: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {

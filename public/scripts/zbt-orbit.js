@@ -64,20 +64,11 @@
     const cLon = Math.cos(rotation), sLon = Math.sin(rotation);
     const cLat = Math.cos(latitude), sLat = Math.sin(latitude);
 
-    // An atmospheric glow conveys volume without drawing an opaque ocean map.
-    const glow = ctx.createRadialGradient(cx - r * .2, cy - r * .12, r * .04, cx, cy, r * 1.05);
-    glow.addColorStop(0, "rgba(99,78,152,.13)");
-    glow.addColorStop(.63, "rgba(77,55,128,.05)");
-    glow.addColorStop(1, "rgba(15,13,23,0)");
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * 1.04, 0, Math.PI * 2);
-    ctx.fill();
-
+    // Transparent canvas: symbols alone form the rotating continents.
     // The globe texture is a projection of the ZebraByte emblem onto continents.
     // Do NOT draw the symbols at any coordinates in the sea.
-    const size = Math.max(8, Math.min(12, r * .04));
-    for (let i = 0; i < points.length; i += (smallScreen.matches ? 7 : 5)) {
+    const size = Math.max(9, Math.min(15, r * .039));
+    for (let i = 0; i < points.length; i += (smallScreen.matches ? 6 : 5)) {
       const p = points[i];
       const x = p[0] * cLon - p[2] * sLon;
       const front = p[2] * cLon + p[0] * sLon;
@@ -87,7 +78,7 @@
 
       const rim = Math.pow(depth, .65);
       const variation = .79 + .21 * Math.sin(i * .48) * Math.sin(i * .17 + 1.3);
-      const opacity = (.16 + .73 * rim) * variation;
+      const opacity = (.18 + .77 * rim) * variation;
       const s = size * (.64 + depth * .38);
       const px = cx + x * r, py = cy - y * r;
       ctx.globalAlpha = Math.max(.10, Math.min(.92, opacity));
